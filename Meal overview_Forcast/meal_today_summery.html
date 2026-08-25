@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Loop - Daily Summary &amp; Performance Audit</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('meal_system_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e) {}
+        })();
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Additional page-specific micro-styles for Daily Summary */
+        form > div.summary-actions-row,
+        .summary-actions-row {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 14px !important;
+            grid-column: 1 / -1 !important;
+            margin-top: 18px !important;
+            flex-wrap: nowrap !important;
+            width: 100% !important;
+        }
+
+        form > div.summary-actions-row button,
+        form > div.summary-actions-row button[type="submit"],
+        .summary-actions-row button,
+        .summary-actions-row button[type="submit"] {
+            grid-column: auto !important;
+            justify-self: auto !important;
+            margin: 0 !important;
+            padding: 12px 28px !important;
+            font-size: 0.95rem !important;
+            font-weight: 600 !important;
+            font-family: inherit !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            border-radius: 8px !important;
+            background: linear-gradient(135deg, #187F87 0%, #146c73 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 4px 14px rgba(24, 127, 135, 0.35) !important;
+            transition: all 0.2s ease !important;
+            width: auto !important;
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
+        }
+
+        form > div.summary-actions-row button[type="submit"]:hover,
+        .summary-actions-row button[type="submit"]:hover {
+            background: linear-gradient(135deg, #187F87 0%, #0e5359 100%) !important;
+            box-shadow: 0 6px 18px rgba(24, 127, 135, 0.45) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        form > div.summary-actions-row .action-btn-outline,
+        .summary-actions-row .action-btn-outline {
+            padding: 12px 28px !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #94a3b8 !important;
+            color: #0f172a !important;
+            border-radius: 8px !important;
+            font-size: 0.95rem !important;
+            font-weight: 600 !important;
+            font-family: inherit !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 4px 14px rgba(148, 163, 184, 0.25) !important;
+            transition: all 0.2s ease !important;
+            margin: 0 !important;
+            width: auto !important;
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
+        }
+
+        .summary-actions-row .action-btn-outline:hover {
+            background: #e2e8f0 !important;
+            border-color: #64748b !important;
+            color: #020617 !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 18px rgba(148, 163, 184, 0.35) !important;
+        }
+
+        [data-theme="dark"] .summary-actions-row .action-btn-outline {
+            background: #1e293b !important;
+            border-color: #475569 !important;
+            color: #f8fafc !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        [data-theme="dark"] .summary-actions-row .action-btn-outline:hover {
+            background: #334155 !important;
+            border-color: #64748b !important;
+            color: #ffffff !important;
+        }
+
+        @media (max-width: 640px) {
+            form > div.summary-actions-row,
+            .summary-actions-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            form > div.summary-actions-row button,
+            form > div.summary-actions-row .action-btn-outline,
+            .summary-actions-row button,
+            .summary-actions-row .action-btn-outline {
+                width: 100% !important;
+            }
+        }
+
+        .action-btn-secondary {
+            padding: 11px 20px;
+            background: rgba(241, 245, 249, 0.9);
+            border: 1px solid var(--primary-border);
+            color: var(--primary-dark);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .action-btn-secondary:hover {
+            background: var(--primary-subtle);
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .action-btn-outline {
+            padding: 12px 24px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .action-btn-outline:hover {
+            background: rgba(241, 245, 249, 0.9);
+            border-color: var(--text-muted);
+            color: var(--text-main);
+            transform: translateY(-1px);
+        }
+
+        [data-theme="dark"] .action-btn-outline {
+            background: #1e293b;
+            color: #cbd5e1;
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .action-btn-outline:hover {
+            background: #334155;
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .action-btn-secondary {
+            background: #1e293b;
+            color: #a3dce1;
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .action-btn-secondary:hover {
+            background: #187F87;
+            color: #ffffff;
+        }
+
+        .sync-notification-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 10px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        [data-theme="dark"] .sync-notification-badge {
+            background: rgba(22, 101, 52, 0.4);
+            border-color: #166534;
+            color: #86efac;
+        }
+
+        .stat-item-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        .summary-dual-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 18px;
+            align-items: stretch;
+        }
+
+        .progress-visual-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin-top: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        [data-theme="dark"] .progress-visual-card {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        .progress-bar-track {
+            height: 16px;
+            width: 100%;
+            background: #e2e8f0;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            margin: 10px 0 8px 0;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-segment {
+            height: 100%;
+            transition: width 0.4s ease;
+        }
+
+        .segment-consumed {
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+        }
+
+        .segment-redistributed {
+            background: linear-gradient(90deg, #187F87, #187F87);
+        }
+
+        .segment-waste {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .progress-legend-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px 12px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .progress-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .guidance-box {
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin-bottom: 0;
+            border-left: 4px solid;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            height: 100%;
+        }
+
+        @media (max-width: 990px) {
+            .summary-dual-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .guidance-optimal {
+            background: rgba(240, 253, 244, 0.95);
+            border: 1px solid #bbf7d0;
+            border-left: 4px solid #22c55e;
+        }
+
+        .guidance-warning {
+            background: rgba(254, 252, 232, 0.95);
+            border: 1px solid #fef08a;
+            border-left: 4px solid #eab308;
+        }
+
+        .guidance-critical {
+            background: rgba(254, 242, 242, 0.95);
+            border: 1px solid #fecaca;
+            border-left: 4px solid #ef4444;
+        }
+
+        [data-theme="dark"] .guidance-optimal {
+            background: rgba(20, 83, 45, 0.3);
+            border-color: #14532d;
+            border-left-color: #22c55e;
+        }
+
+        [data-theme="dark"] .guidance-warning {
+            background: rgba(113, 63, 18, 0.3);
+            border-color: #713f12;
+            border-left-color: #eab308;
+        }
+
+        [data-theme="dark"] .guidance-critical {
+            background: rgba(127, 29, 29, 0.3);
+            border-color: #7f1d1d;
+            border-left-color: #ef4444;
+        }
+
+        .guidance-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        [data-theme="dark"] .guidance-icon {
+            background: #1e293b;
+        }
+
+        .guidance-content h4 {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .guidance-content p {
+            font-size: 0.83rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        .guidance-tools-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        @media print {
+            .side-panel,
+            .top-bar,
+            .summary-actions-row,
+            .guidance-tools-row,
+            form {
+                display: none !important;
+            }
+            .main-wrapper,
+            .main-content {
+                padding: 0 !important;
+                background: white !important;
+            }
+            .unified-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Taller Full-Height Side Panel Navigation -->
+        <aside class="side-panel">
+            <div class="side-panel-top">
+                <div class="side-panel-header">
+                    <div class="side-panel-logo" aria-label="Meal Loop Logo" title="Meal Loop - Kitchen &amp; Forecast Hub">
+                        <img src="logo.png" alt="Meal Loop Logo" class="side-panel-logo-img">
+                    </div>
+                    <div class="side-panel-brand">
+                        <span class="side-panel-title">Meal Loop</span>
+                        <span class="side-panel-subtitle">Kitchen &amp; Forecast Hub</span>
+                    </div>
+                </div>
+
+                <!-- Side Panel Primary Navigation Links -->
+                <nav class="side-panel-nav">
+                    <a href="meal_overview.html" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="7" height="9" x="3" y="3" rx="1" />
+                            <rect width="7" height="5" x="14" y="3" rx="1" />
+                            <rect width="7" height="9" x="14" y="12" rx="1" />
+                            <rect width="7" height="5" x="3" y="16" rx="1" />
+                        </svg>
+                        <span>Meal Overview</span>
+                    </a>
+
+                    <a href="meal_forecast_system.html#forecastView" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18" />
+                            <path d="m19 9-5 5-4-4-3 3" />
+                        </svg>
+                        <span>Demand Forecast</span>
+                    </a>
+
+                    <a href="meal_forecast_system.html#surplusDistributionView" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            <path d="M9 12l2 2 4-4" />
+                        </svg>
+                        <span>Surplus, Safety &amp; Results</span>
+                    </a>
+
+                    <button type="button" class="nav-btn active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span>Daily Summary</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Bottom Section: Divided Settings & Logout -->
+            <div class="side-panel-bottom">
+                <div class="side-panel-divider"></div>
+                <nav class="side-panel-nav" style="margin-top: 6px;">
+                    <a href="meal_overview.html#settingsView" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        <span>System Settings</span>
+                    </a>
+                    <button type="button" class="nav-btn nav-btn-logout" onclick="handleLogout()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" x2="9" y1="12" y2="12" />
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper with Integrated Header & Content Area -->
+        <div class="main-wrapper">
+            <!-- Integrated Top Header Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <div class="top-bar-date">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                            <line x1="16" x2="16" y1="2" y2="6" />
+                            <line x1="8" x2="8" y1="2" y2="6" />
+                            <line x1="3" x2="21" y1="10" y2="10" />
+                        </svg>
+                        <span id="liveCurrentDate">Sunday, August 15, 2026</span>
+                    </div>
+
+                    <div class="top-divider"></div>
+
+                    <span class="status-badge status-open" id="summaryKitchenStatusBadge" ondblclick="toggleKitchenStatus()" style="cursor: pointer; user-select: none;" title="Double-click to toggle Kitchen Status (Open/Closed)">
+                        <span class="status-dot"></span>
+                        <span id="summaryKitchenStatusText">Kitchen Status: Open</span>
+                    </span>
+
+                    <span class="badge badge-info" style="font-size: 0.72rem; padding: 2px 8px;">Currency: Indian Rupee (₹)</span>
+                </div>
+
+                <div class="top-bar-right">
+                    <!-- Notification Button -->
+                    <div style="position: relative;">
+                        <button type="button" class="icon-btn" id="notifBtn" onclick="toggleDropdown('notifDropdown')" title="Notifications">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                            </svg>
+                            <span class="icon-badge" id="summaryNotifBadge">2</span>
+                        </button>
+
+                        <div class="dropdown-menu" id="notifDropdown">
+                            <div style="padding: 8px 16px; font-weight: 700; font-size: 0.85rem; color: var(--primary-dark); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                                <span>Recent Notifications</span>
+                                <a href="javascript:void(0)" onclick="clearAllNotifications()" style="font-size: 0.72rem; color: var(--primary); text-decoration: none;">Clear All</a>
+                            </div>
+                            <div id="summaryNotifContainer">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Theme Toggle Button -->
+                    <button type="button" class="icon-btn theme-toggle-btn" id="themeQuickToggleBtn" onclick="FoodSafe.toggleTheme()" title="Toggle Dark / Light Mode" aria-label="Toggle Theme">
+                        <svg class="theme-icon-light" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                        </svg>
+                        <svg class="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Settings Quick Button -->
+                    <a href="meal_overview.html#settingsView" class="icon-btn" title="Settings">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </a>
+
+                    <!-- User Profile Dropdown -->
+                    <div style="position: relative;">
+                        <button type="button" class="user-profile-btn" onclick="toggleDropdown('userDropdown')">
+                            <div class="user-avatar" id="summaryUserAvatar">M</div>
+                            <span class="user-name" id="summaryUserName">Kitchen Manager</span>
+                            <svg class="user-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </button>
+
+                        <div class="dropdown-menu" id="userDropdown">
+                            <div style="padding: 8px 14px; border-bottom: 1px solid var(--border-color);">
+                                <div style="font-weight: 700; font-size: 0.84rem; color: var(--text-main);" id="summaryDropName">Kitchen Manager</div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted);" id="summaryDropRole">Kitchen Administrator</div>
+                            </div>
+                            <button type="button" class="dropdown-item" onclick="FoodSafeAvatars.openPicker()">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                <span>Choose Profile Avatar</span>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button type="button" class="dropdown-item" style="color: #ef4444;" onclick="handleLogout()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                    <polyline points="16 17 21 12 16 7" />
+                                    <line x1="21" x2="9" y1="12" y2="12" />
+                                </svg>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <div class="view-panel active">
+                    <!-- Top Page Header with Prominent Print & Audit Actions -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 22px;">
+                        <div>
+                            <h1 style="margin-bottom: 4px;">Meal Daily Summary &amp; Performance Audit</h1>
+                            <p style="font-size: 0.86rem; color: var(--text-muted); margin: 0;">Reconcile kitchen production, guest attendance, surplus redistribution, profit, and avoided CO2 emissions.</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="action-btn-secondary" onclick="window.print()">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 6 2 18 2 18 9"/>
+                                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                                    <rect width="12" height="8" x="6" y="14"/>
+                                </svg>
+                                Print / Export Audit Report
+                            </button>
+                            <a href="meal_overview.html" class="action-btn-secondary" style="background: rgba(16, 94, 100, 0.9); color: #ffffff; font-weight: 600; padding: 11px 20px;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                                Meal Overview
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Single Unified White Card Container -->
+                    <div class="unified-card">
+                        <!-- Subsection 1: Input Section -->
+                        <div>
+                            <div class="card-section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <span>Production &amp; Shift Consumption Reconciliation</span>
+                                    <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Reconcile actuals against kitchen forecasts (All amounts in ₹)</span>
+                                </div>
+                                <div id="modeStatusIndicator" style="display: flex; align-items: center; gap: 8px;">
+                                    <span id="summaryModeBadge" class="auto-mode-badge">Auto-Shift Sync Active</span>
+                                    <a href="meal_overview.html#settingsView" class="action-btn-outline" style="padding: 4px 10px; font-size: 0.76rem; font-weight: 600; text-decoration: none;" title="Configure Auto/Manual mode in Kitchen Settings">Settings</a>
+                                </div>
+                            </div>
+
+                            <!-- Shift Quick Selector Tabs -->
+                            <div class="shift-selector-tabs">
+                                <button type="button" class="shift-selector-tab" id="shiftTabBreakfast" onclick="selectShiftSummary('Breakfast')">
+                                    <span>Breakfast Shift</span>
+                                </button>
+                                <button type="button" class="shift-selector-tab active" id="shiftTabLunch" onclick="selectShiftSummary('Lunch')">
+                                    <span>Lunch Shift</span>
+                                </button>
+                                <button type="button" class="shift-selector-tab" id="shiftTabSnacks" onclick="selectShiftSummary('Snacks')">
+                                    <span>Snacks Shift</span>
+                                </button>
+                                <button type="button" class="shift-selector-tab" id="shiftTabDinner" onclick="selectShiftSummary('Dinner')">
+                                    <span>Dinner Shift</span>
+                                </button>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; padding: 8px 12px; background: var(--bg-muted, #f8fafc); border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0);">
+                                <div style="font-size: 0.82rem; color: var(--text-muted);">
+                                    <span id="shiftModeDetailText">Live POS data is continuously synced into daily summary.</span>
+                                </div>
+                                <div style="font-size: 0.76rem; color: var(--text-muted);">
+                                    Mode managed via <a href="meal_overview.html#settingsView" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Kitchen Settings</a>
+                                </div>
+                            </div>
+
+                            <form id="summaryForm" onsubmit="event.preventDefault(); calculateSummary(true);">
+                                <div>
+                                    <label for="summaryDate">Service Date:</label>
+                                    <input type="date" id="summaryDate" name="summaryDate" onchange="loadActiveShiftData();">
+                                </div>
+
+                                <div>
+                                    <label for="mealShift">Meal Shift / Session:</label>
+                                    <select id="mealShift" name="mealShift" onchange="selectShiftSummary(this.value);">
+                                        <option value="Breakfast">Breakfast Service</option>
+                                        <option value="Lunch" selected>Lunch Service</option>
+                                        <option value="Snacks">Snacks Service</option>
+                                        <option value="Dinner">Dinner Service</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="weatherSelect">Weather Condition:</label>
+                                    <select id="weatherSelect" onchange="persistSummaryParamChanges(); calculateSummary();">
+                                        <option value="Sunny" selected>Sunny</option>
+                                        <option value="Cloudy">Cloudy</option>
+                                        <option value="Rainy">Rainy</option>
+                                        <option value="Snowy">Snowy</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="calendarEventSelect">Calendar Event:</label>
+                                    <select id="calendarEventSelect" onchange="persistSummaryParamChanges(); calculateSummary();">
+                                        <option value="None" selected>None (Regular Day)</option>
+                                        <option value="Holiday">Holiday</option>
+                                        <option value="Exam Period">Exam Period</option>
+                                        <option value="Vacation/Break">Vacation/Break</option>
+                                        <option value="Special Event">Special Event</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="foodMade">1. Food Made (portions):</label>
+                                    <input type="number" id="foodMade" name="foodMade" placeholder="0" min="0" oninput="calculateSummary(false); persistSummaryParamChanges();">
+                                </div>
+
+                                <div>
+                                    <label for="attendance">2. Attendance (people who came):</label>
+                                    <input type="number" id="attendance" name="attendance" placeholder="0" min="0" oninput="calculateSummary(false); persistSummaryParamChanges();">
+                                </div>
+
+                                <div>
+                                    <label for="foodConsumed">3. Food Consumed (portions eaten):</label>
+                                    <input type="number" id="foodConsumed" name="foodConsumed" placeholder="0" min="0" oninput="calculateSummary(false); persistSummaryParamChanges();">
+                                </div>
+
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <label for="foodRedistributed" style="margin: 0;">5. Food Redistributed (portions donated):</label>
+                                        <span id="redistSyncBadge" style="font-size: 0.73rem; color: #15803d; font-weight: 600; display: none;">✓ Synced from Surplus &amp; Safety</span>
+                                    </div>
+                                    <input type="number" id="foodRedistributed" name="foodRedistributed" placeholder="0" min="0" oninput="calculateSummary(false); persistSummaryParamChanges();">
+                                </div>
+
+                                <div>
+                                    <label for="costPerMeal">Cost to Make 1 Meal (₹):</label>
+                                    <input type="number" id="costPerMeal" name="costPerMeal" placeholder="35.00" min="0" step="0.50" oninput="calculateSummary(false); persistSummaryParamChanges();">
+                                </div>
+
+                                <div>
+                                    <label for="pricePerMeal">Selling Price / Value per Meal (₹):</label>
+                                    <input type="number" id="pricePerMeal" name="pricePerMeal" placeholder="50.00" min="0" step="0.50" oninput="calculateSummary(false); persistSummaryParamChanges();">
+                                </div>
+
+                                <div>
+                                    <label for="surplus">4. Surplus (Auto-calculated portions):</label>
+                                    <input type="number" id="surplus" name="surplus" placeholder="0" readonly style="background-color: var(--primary-subtle); font-weight: 700; color: var(--primary-dark);">
+                                </div>
+
+                                <div>
+                                    <label for="waste">6. Waste (Auto-calculated: Surplus - Redistributed):</label>
+                                    <input type="number" id="waste" name="waste" placeholder="0" readonly style="background-color: var(--primary-subtle); font-weight: 700; color: var(--primary-dark);">
+                                </div>
+
+                                <div class="summary-actions-row">
+                                    <button type="submit" id="btnSaveSummary">
+                                        Save &amp; Update Shift Summary
+                                    </button>
+                                    <button type="button" class="action-btn-outline" onclick="loadActiveShiftData()">
+                                        Reload Shift Data
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div id="syncStatusBox" style="display: none;" class="sync-notification-badge">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span id="syncStatusText">Synced with Historical Overview Store</span>
+                            </div>
+                        </div>
+
+                        <div class="card-section-divider"></div>
+
+                        <!-- Subsection 2: Live KPI Performance Cards -->
+                        <div>
+                            <div class="card-section-title">
+                                <span>Core Performance Summary (Financials, Operations &amp; Carbon Avoidance)</span>
+                                <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Real-time calculated totals based on your inputs</span>
+                            </div>
+
+                            <div class="stats-summary-grid">
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Total Kitchen Cost</div>
+                                    <div class="stat-item-val" id="kpiTotalCost">₹4,200.00</div>
+                                    <div class="stat-item-sub" id="kpiCostPerMealSub">120 portions @ ₹35.00/meal</div>
+                                </div>
+
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Total Sales Revenue</div>
+                                    <div class="stat-item-val" id="kpiTotalRevenue" style="color: #16a34a;">₹5,200.00</div>
+                                    <div class="stat-item-sub" id="kpiRevPerMealSub">104 eaten @ ₹50.00/meal</div>
+                                </div>
+
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Net Profit / Loss</div>
+                                    <div class="stat-item-val" id="kpiProfit" style="color: var(--primary);">+₹1,000.00</div>
+                                    <div class="stat-item-sub" id="kpiProfitMarginSub">+19.2% profit margin</div>
+                                </div>
+
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Avoided CO2 (Rescued)</div>
+                                    <div class="stat-item-val" id="kpiAvoidedCo2" style="color: #15803d;">+20.0 kg CO2e</div>
+                                    <div class="stat-item-sub" id="kpiAvoidedCo2Sub">10 donated × 2.0 kg CO2</div>
+                                </div>
+
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Total Lifecycle CO2 Avoided</div>
+                                    <div class="stat-item-val" id="kpiTotalCo2" style="color: #15803d;">+228.0 kg CO2e</div>
+                                    <div class="stat-item-sub">114 preserved portions (95.0%)</div>
+                                </div>
+
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Food Waste Loss</div>
+                                    <div class="stat-item-val" id="kpiWasteLoss" style="color: #dc2626;">-₹210.00</div>
+                                    <div class="stat-item-sub" id="kpiWastePctSub">6 portions (5.0% waste)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-section-divider"></div>
+
+                        <!-- Subsection 3: Dynamic Progress Bar & Guidance -->
+                        <div class="summary-dual-grid">
+                            <!-- Visual Progress Bar Card -->
+                            <div class="progress-visual-card">
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main); margin-bottom: 2px;">
+                                        Production Distribution Breakdown
+                                    </div>
+                                    <div style="font-size: 0.76rem; color: var(--text-muted);">
+                                        How the total prepared food volume was partitioned
+                                    </div>
+
+                                    <div class="progress-bar-track">
+                                        <div id="barConsumed" class="progress-segment segment-consumed" style="width: 86.7%;" title="Consumed: 86.7%"></div>
+                                        <div id="barRedistributed" class="progress-segment segment-redistributed" style="width: 8.3%;" title="Redistributed: 8.3%"></div>
+                                        <div id="barWaste" class="progress-segment segment-waste" style="width: 5.0%;" title="Waste: 5.0%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="progress-legend-row">
+                                    <div class="progress-legend-item">
+                                        <div class="legend-indicator" style="background: #16a34a;"></div>
+                                        <span id="legendConsumed">Consumed: 104 (86.7%)</span>
+                                    </div>
+                                    <div class="progress-legend-item">
+                                        <div class="legend-indicator" style="background: #187F87;"></div>
+                                        <span id="legendRedistributed">Redistributed: 10 (8.3%)</span>
+                                    </div>
+                                    <div class="progress-legend-item">
+                                        <div class="legend-indicator" style="background: #ef4444;"></div>
+                                        <span id="legendWaste">Waste: 6 (5.0%)</span>
+                                    </div>
+                                    <div class="progress-legend-item">
+                                        <div class="legend-indicator" style="background: #15803d;"></div>
+                                        <span id="legendTotalUtilized">Total Utilized: 95.0%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Guidance / Takeaway Recommendation Box -->
+                            <div id="warningOutput">
+                                <div class="guidance-box guidance-optimal">
+                                    <div class="guidance-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="m9 12 2 2 4-4" />
+                                        </svg>
+                                    </div>
+                                    <div class="guidance-content">
+                                        <h4>Service Summary: +₹1,000.00 Profit &amp; 10 Portions Rescued</h4>
+                                        <p>You prepared <strong>120 portions</strong> for <strong>110 attendees</strong> (total kitchen cost: <strong>₹4,200.00</strong>) and sold <strong>104 portions</strong> for <strong>₹5,200.00</strong>, generating <strong>+₹1,000.00 net profit</strong>. Out of <strong>16 surplus portions</strong>, <strong>10 portions</strong> were donated (saving ₹350.00 worth of food), leaving unrecovered waste loss at <strong>6 portions (-₹210.00 loss)</strong> and avoiding <strong>228.0 kg CO2e</strong> in lifecycle emissions.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-section-divider"></div>
+
+                        <!-- Subsection 4: Full 10-Point Step-by-Step Breakdown Table -->
+                        <div>
+                            <div class="card-section-title">
+                                <span>Detailed 10-Point Step-by-Step Breakdown</span>
+                                <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Exact answers to all 10 reconciliation questions</span>
+                            </div>
+
+                            <div style="overflow-x: auto;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Question</th>
+                                            <th>How It Is Calculated</th>
+                                            <th>Quantity</th>
+                                            <th>Financial Value (₹)</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="breakdownTableBody">
+                                        <!-- Populated dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card-section-divider"></div>
+
+                        <!-- Subsection 5: Historical 3-Day Comparison Log -->
+                        <div id="auditLogSection">
+                            <div class="card-section-title">
+                                <span>Historical Consumption &amp; Redistribution Logs (Today vs Previous 3 Days)</span>
+                                <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Compare today's production, consumption, waste, and CO2 directly against the previous 3 days' baseline</span>
+                            </div>
+
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date &amp; Shift</th>
+                                        <th>Weather</th>
+                                        <th>Prepared</th>
+                                        <th>Consumed</th>
+                                        <th>Redistributed</th>
+                                        <th>Net Waste</th>
+                                        <th>Avoided CO2</th>
+                                        <th>Net Financial Profit</th>
+                                        <th>Comparison Baseline</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Tomorrow Forecast Demand Calibration Banner -->
+                        <div class="eod-closing-banner">
+                            <div>
+                                <div class="eod-closing-banner-title">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                    <span>Tomorrow Demand Calibration</span>
+                                </div>
+                                <div class="eod-closing-banner-desc">
+                                    Auto-calibrate tomorrow's AI meal demand prediction model based on recent shift consumption and patterns.
+                                </div>
+                            </div>
+                            <button type="button" class="btn-eod-close" onclick="openEodClosingModal()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                <span>Calibrate Tomorrow's Demand</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Tomorrow Demand Calibration Modal -->
+    <div id="eodClosingModal" class="eod-modal-backdrop" onclick="if(event.target === this) closeEodModal();">
+        <div class="eod-modal-box">
+            <div class="eod-modal-header">
+                <div style="font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    <span>Tomorrow's Demand Calibration</span>
+                </div>
+                <div style="font-size: 0.84rem; opacity: 0.9; margin-top: 4px;">Calibrated across daily shifts (Breakfast, Lunch, Snacks, Dinner)</div>
+            </div>
+            <div class="eod-modal-body">
+                <div class="eod-metrics-grid">
+                    <div class="eod-metric-pill">
+                        <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;">TOTAL MEALS PREPARED</div>
+                        <div id="eodTotalPrepared" style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-top: 2px;">380 Meals</div>
+                    </div>
+                    <div class="eod-metric-pill">
+                        <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;">TOTAL MEALS CONSUMED</div>
+                        <div id="eodTotalConsumed" style="font-size: 1.15rem; font-weight: 800; color: #16a34a; margin-top: 2px;">340 Meals</div>
+                    </div>
+                    <div class="eod-metric-pill">
+                        <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;">SURPLUS DONATED / RESCUED</div>
+                        <div id="eodTotalRescued" style="font-size: 1.15rem; font-weight: 800; color: var(--primary); margin-top: 2px;">30 Meals</div>
+                    </div>
+                    <div class="eod-metric-pill">
+                        <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;">NET DAY PROFIT / (LOSS)</div>
+                        <div id="eodTotalProfit" style="font-size: 1.15rem; font-weight: 800; color: var(--primary); margin-top: 2px;">+₹3,410.00</div>
+                    </div>
+                </div>
+
+                <div class="eod-prediction-highlight">
+                    <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; color: var(--primary); letter-spacing: 0.05em; margin-bottom: 4px;">
+                        Tomorrow's AI Prediction Calibrated (All 4 Shifts)
+                    </div>
+                    <div id="eodTomorrowPredictionText" style="font-size: 1.35rem; font-weight: 800; color: var(--text-main);">
+                        332 Total Portions Planned
+                    </div>
+                    <div id="eodTomorrowShiftBreakdown" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                        <span class="badge badge-info" id="eodShiftBreakfast">🌅 Breakfast: 80 meals</span>
+                        <span class="badge badge-high" id="eodShiftLunch">☀️ Lunch: 102 meals</span>
+                        <span class="badge badge-warning" id="eodShiftSnacks">☕ Snacks: 55 meals</span>
+                        <span class="badge badge-medium" id="eodShiftDinner">🌙 Dinner: 95 meals</span>
+                    </div>
+                    <div id="eodTomorrowDateText" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                        Stored to Database: All 4 shifts stored in meal_forecasts table once for tomorrow.
+                    </div>
+                </div>
+            </div>
+            <div class="eod-modal-actions">
+                <button type="button" class="btn-eod-close" style="flex: 1; justify-content: center;" onclick="closeEodModal()">
+                    Continue to Next Shift &rarr;
+                </button>
+                <button type="button" class="action-btn-outline" style="padding: 12px 18px;" onclick="viewOverviewAndNextShift()">
+                    View Overview &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase JS Client & App Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabaseClient.js"></script>
+    <!-- Core State & Avatar Scripts -->
+    <script src="../shared_foodsafe.js"></script>
+    <script src="foodsafe_avatars.js"></script>
+    <script>
+        // Local State
+        let currentActiveShift = 'Lunch';
+
+        function viewOverviewAndNextShift() {
+            const shifts = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+            const currentIndex = shifts.indexOf(currentActiveShift);
+            if (currentIndex !== -1) {
+                const nextShift = shifts[(currentIndex + 1) % shifts.length];
+                selectShiftSummary(nextShift, true);
+            }
+            window.location.href = 'meal_overview.html';
+        }
+
+        const CO2_FACTOR = 2.00;
+
+        function autoUpdateSurplusAndWaste() {
+            const foodMadeEl = document.getElementById('foodMade');
+            const foodConsumedEl = document.getElementById('foodConsumed');
+            const foodRedistributedEl = document.getElementById('foodRedistributed');
+            const surplusEl = document.getElementById('surplus');
+            const wasteEl = document.getElementById('waste');
+
+            const foodMadeStr = foodMadeEl ? foodMadeEl.value.trim() : '';
+            const foodConsumedStr = foodConsumedEl ? foodConsumedEl.value.trim() : '';
+            const foodRedistStr = foodRedistributedEl ? foodRedistributedEl.value.trim() : '';
+
+            if (foodMadeStr === '' && foodConsumedStr === '') {
+                if (surplusEl) surplusEl.value = '';
+                if (wasteEl) wasteEl.value = '';
+                return;
+            }
+
+            const foodMade = Math.max(0, parseFloat(foodMadeStr) || 0);
+            let foodConsumed = parseFloat(foodConsumedStr) || 0;
+
+            if (foodConsumedEl && foodMade > 0) foodConsumedEl.max = foodMade;
+            if (foodConsumed > foodMade && foodMade > 0) {
+                foodConsumed = foodMade;
+                if (foodConsumedEl) foodConsumedEl.value = foodMade;
+            }
+
+            const foodRedistributed = parseFloat(foodRedistStr) || 0;
+
+            const surplus = Math.max(0, foodMade - foodConsumed);
+            const waste = Math.max(0, surplus - foodRedistributed);
+
+            if (surplusEl) surplusEl.value = surplus;
+            if (wasteEl) wasteEl.value = waste;
+        }
+
+        function selectShiftSummary(shiftName, notify = true) {
+            const normShift = normalizeShiftName(shiftName);
+            currentActiveShift = normShift;
+            
+            // Update tabs active state
+            const shifts = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+            shifts.forEach(s => {
+                const tab = document.getElementById(`shiftTab${s}`);
+                if (tab) tab.classList.toggle('active', s.toLowerCase() === normShift.toLowerCase());
+            });
+
+            // Update shift select dropdown
+            const selectEl = document.getElementById('mealShift');
+            if (selectEl) selectEl.value = normShift;
+
+            loadActiveShiftData();
+
+            if (notify) {
+                FoodSafe.setTarget({ mealType: normShift });
+                FoodSafe.toast(`Switched daily summary to ${normShift} Shift.`, 'info');
+            }
+        }
+
+        function normalizeShiftName(shift) {
+            if (!shift) return 'Lunch';
+            const s = shift.toLowerCase();
+            if (s.includes('break')) return 'Breakfast';
+            if (s.includes('snack')) return 'Snacks';
+            if (s.includes('din')) return 'Dinner';
+            return 'Lunch';
+        }
+
+        function normalizeWeatherName(w) {
+            if (!w) return 'Sunny';
+            const lw = w.toLowerCase();
+            if (lw.includes('cloud')) return 'Cloudy';
+            if (lw.includes('rain')) return 'Rainy';
+            if (lw.includes('snow')) return 'Snowy';
+            return 'Sunny';
+        }
+
+        function normalizeEventName(e) {
+            if (!e) return 'None';
+            const le = e.toLowerCase();
+            if (le.includes('holi')) return 'Holiday';
+            if (le.includes('exam')) return 'Exam Period';
+            if (le.includes('vacat') || le.includes('break')) return 'Vacation/Break';
+            if (le.includes('special')) return 'Special Event';
+            return 'None';
+        }
+
+        function persistSummaryParamChanges() {
+            const weatherVal = document.getElementById('weatherSelect')?.value || 'Sunny';
+            const eventVal = document.getElementById('calendarEventSelect')?.value || 'None';
+            const foodMadeStr = document.getElementById('foodMade')?.value?.trim();
+            const attendanceStr = document.getElementById('attendance')?.value?.trim();
+            const foodConsumedStr = document.getElementById('foodConsumed')?.value?.trim();
+            const foodRedistStr = document.getElementById('foodRedistributed')?.value?.trim();
+            const costStr = document.getElementById('costPerMeal')?.value?.trim();
+            const priceStr = document.getElementById('pricePerMeal')?.value?.trim();
+            const dateVal = document.getElementById('summaryDate')?.value || new Date().toISOString().slice(0, 10);
+
+            const foodMade = foodMadeStr !== '' && foodMadeStr !== undefined ? parseFloat(foodMadeStr) : null;
+            const attendance = attendanceStr !== '' && attendanceStr !== undefined ? parseFloat(attendanceStr) : null;
+            const foodConsumed = foodConsumedStr !== '' && foodConsumedStr !== undefined ? parseFloat(foodConsumedStr) : null;
+            const foodRedistributed = foodRedistStr !== '' && foodRedistStr !== undefined ? parseFloat(foodRedistStr) : 0;
+            const costPerMeal = costStr !== '' && costStr !== undefined ? parseFloat(costStr) : null;
+            const pricePerMeal = priceStr !== '' && priceStr !== undefined ? parseFloat(priceStr) : null;
+
+            // Cache shift values into daily shift store without prematurely touching forecast targets
+            const shifts = FoodSafe.getDailyShifts(dateVal);
+            shifts[currentActiveShift] = {
+                ...shifts[currentActiveShift],
+                date: dateVal,
+                shift: currentActiveShift,
+                weather: weatherVal,
+                event: eventVal,
+                foodMade: foodMade,
+                attendance: attendance,
+                foodConsumed: foodConsumed,
+                foodRedistributed: foodRedistributed,
+                costPerMeal: costPerMeal,
+                pricePerMeal: pricePerMeal
+            };
+            FoodSafe.saveDailyShifts(dateVal, shifts);
+        }
+
+        function loadActiveShiftData() {
+            const dateInput = document.getElementById('summaryDate');
+            if (dateInput && !dateInput.value) {
+                dateInput.value = new Date().toISOString().slice(0, 10);
+            }
+            const dateVal = dateInput ? dateInput.value : new Date().toISOString().slice(0, 10);
+            const dailyShifts = FoodSafe.getDailyShifts(dateVal);
+            const activeTarget = FoodSafe.getTarget();
+            
+            const shiftDefaults = {
+                'Breakfast': { foodMade: 80, attendance: 85, foodConsumed: 75, foodRedistributed: 3, costPerMeal: 25.00, pricePerMeal: 35.00 },
+                'Lunch': { foodMade: 102, attendance: 100, foodConsumed: 94, foodRedistributed: 5, costPerMeal: 35.00, pricePerMeal: 50.00 },
+                'Snacks': { foodMade: 55, attendance: 60, foodConsumed: 48, foodRedistributed: 4, costPerMeal: 20.00, pricePerMeal: 30.00 },
+                'Dinner': { foodMade: 95, attendance: 95, foodConsumed: 88, foodRedistributed: 4, costPerMeal: 35.00, pricePerMeal: 50.00 }
+            };
+
+            const def = shiftDefaults[currentActiveShift] || shiftDefaults['Lunch'];
+            let shiftData = dailyShifts[currentActiveShift];
+
+            const settings = FoodSafe.getKitchenSettings();
+            const isAuto = (settings.dailySummaryMode || 'auto') === 'auto';
+
+            if (!shiftData && isAuto) {
+                shiftData = {
+                    foodMade: activeTarget?.portions !== undefined && activeTarget?.portions !== null ? activeTarget.portions : def.foodMade,
+                    attendance: activeTarget?.attendance !== undefined && activeTarget?.attendance !== null ? activeTarget.attendance : def.attendance,
+                    foodConsumed: activeTarget?.actualConsumption !== undefined && activeTarget?.actualConsumption !== null ? activeTarget.actualConsumption : def.foodConsumed,
+                    foodRedistributed: def.foodRedistributed,
+                    costPerMeal: activeTarget?.costPerMeal !== undefined && activeTarget?.costPerMeal !== null ? activeTarget.costPerMeal : def.costPerMeal,
+                    pricePerMeal: activeTarget?.pricePerMeal !== undefined && activeTarget?.pricePerMeal !== null ? activeTarget.pricePerMeal : def.pricePerMeal,
+                    weather: activeTarget?.weather || 'Sunny',
+                    event: activeTarget?.event || 'None'
+                };
+            }
+
+            // Synchronize active target portions & consumption into shift data
+            if (activeTarget) {
+                const targetMeal = normalizeShiftName(activeTarget.mealType);
+                const isTargetShift = currentActiveShift.toLowerCase() === targetMeal.toLowerCase();
+                
+                if (isTargetShift && shiftData) {
+                    if (activeTarget.portions !== undefined) shiftData.foodMade = activeTarget.portions;
+                    if (activeTarget.attendance !== undefined) shiftData.attendance = activeTarget.attendance;
+                    if (activeTarget.actualConsumption !== undefined) shiftData.foodConsumed = activeTarget.actualConsumption;
+                    if (activeTarget.costPerMeal !== undefined && activeTarget.costPerMeal !== null) shiftData.costPerMeal = activeTarget.costPerMeal;
+                    if (activeTarget.pricePerMeal !== undefined && activeTarget.pricePerMeal !== null) shiftData.pricePerMeal = activeTarget.pricePerMeal;
+                    if (activeTarget.weather) shiftData.weather = normalizeWeatherName(activeTarget.weather);
+                    if (activeTarget.event) shiftData.event = normalizeEventName(activeTarget.event);
+                }
+            }
+
+            const activeEl = document.activeElement;
+            const foodMadeEl = document.getElementById('foodMade');
+            const attendanceEl = document.getElementById('attendance');
+            const foodConsumedEl = document.getElementById('foodConsumed');
+            const foodRedistributedEl = document.getElementById('foodRedistributed');
+            const costEl = document.getElementById('costPerMeal');
+            const priceEl = document.getElementById('pricePerMeal');
+
+            // Real-time synchronization with Surplus & Safety NGO Dispatches
+            const realRedistributed = FoodSafe.getRedistributedPortionsForShift(dateVal, currentActiveShift);
+            const redistSyncBadge = document.getElementById('redistSyncBadge');
+            if (redistSyncBadge) {
+                if (realRedistributed > 0) {
+                    redistSyncBadge.style.display = 'inline';
+                    redistSyncBadge.textContent = `(✓ ${realRedistributed} portions synced from Surplus & Safety)`;
+                } else {
+                    redistSyncBadge.style.display = 'none';
+                }
+            }
+
+            const wasteEl = document.getElementById('waste');
+
+            if (shiftData) {
+                if (realRedistributed > 0) {
+                    shiftData.foodRedistributed = realRedistributed;
+                }
+                if (foodMadeEl && activeEl !== foodMadeEl) foodMadeEl.value = shiftData.foodMade !== undefined && shiftData.foodMade !== null ? shiftData.foodMade : '';
+                if (attendanceEl && activeEl !== attendanceEl) attendanceEl.value = shiftData.attendance !== undefined && shiftData.attendance !== null ? shiftData.attendance : '';
+                if (foodConsumedEl && activeEl !== foodConsumedEl) foodConsumedEl.value = shiftData.foodConsumed !== undefined && shiftData.foodConsumed !== null ? shiftData.foodConsumed : '';
+                if (foodRedistributedEl && activeEl !== foodRedistributedEl) foodRedistributedEl.value = shiftData.foodRedistributed !== undefined && shiftData.foodRedistributed !== null ? shiftData.foodRedistributed : (realRedistributed > 0 ? realRedistributed : '');
+                if (wasteEl && activeEl !== wasteEl) wasteEl.value = shiftData.waste !== undefined && shiftData.waste !== null ? shiftData.waste : '';
+                if (costEl && activeEl !== costEl) costEl.value = shiftData.costPerMeal !== undefined && shiftData.costPerMeal !== null ? (parseFloat(shiftData.costPerMeal) || 0).toFixed(2) : '';
+                if (priceEl && activeEl !== priceEl) priceEl.value = shiftData.pricePerMeal !== undefined && shiftData.pricePerMeal !== null ? (parseFloat(shiftData.pricePerMeal) || 0).toFixed(2) : '';
+                if (shiftData.weather) document.getElementById('weatherSelect').value = normalizeWeatherName(shiftData.weather);
+                if (shiftData.event) document.getElementById('calendarEventSelect').value = normalizeEventName(shiftData.event);
+            } else {
+                // In manual mode without existing shift log, keep fields empty and show placeholders
+                if (foodMadeEl && activeEl !== foodMadeEl) { foodMadeEl.value = ''; foodMadeEl.placeholder = `0`; }
+                if (attendanceEl && activeEl !== attendanceEl) { attendanceEl.value = ''; attendanceEl.placeholder = `0`; }
+                if (foodConsumedEl && activeEl !== foodConsumedEl) { foodConsumedEl.value = ''; foodConsumedEl.placeholder = `0`; }
+                if (foodRedistributedEl && activeEl !== foodRedistributedEl) { foodRedistributedEl.value = realRedistributed > 0 ? realRedistributed : ''; foodRedistributedEl.placeholder = `${realRedistributed || 0}`; }
+                if (wasteEl && activeEl !== wasteEl) { wasteEl.value = ''; wasteEl.placeholder = `0`; }
+                if (costEl && activeEl !== costEl) { costEl.value = ''; costEl.placeholder = `35.00`; }
+                if (priceEl && activeEl !== priceEl) { priceEl.value = ''; priceEl.placeholder = `50.00`; }
+            }
+
+            calculateSummary(false);
+            renderHistoryTable();
+        }
+
+        function syncDailySummaryModeUI() {
+            const settings = FoodSafe.getKitchenSettings();
+            const isAuto = (settings.dailySummaryMode || 'auto') === 'auto';
+            const badge = document.getElementById('summaryModeBadge');
+            const detailText = document.getElementById('shiftModeDetailText');
+            const saveBtn = document.getElementById('btnSaveSummary');
+
+            if (isAuto) {
+                if (badge) {
+                    badge.className = 'auto-mode-badge';
+                    badge.textContent = 'Auto-Shift Sync Active';
+                }
+                if (detailText) detailText.textContent = 'Live POS and kitchen portion logs automatically sync to daily summary as shifts progress.';
+                if (saveBtn) saveBtn.textContent = 'Save & Update Active Shift Summary';
+            } else {
+                if (badge) {
+                    badge.className = 'badge badge-warning';
+                    badge.textContent = 'Manual Entry Mode';
+                }
+                if (detailText) detailText.textContent = 'Manual mode: Enter and reconcile shift portions and financials manually.';
+                if (saveBtn) saveBtn.textContent = 'Calculate and Save Shift Log';
+            }
+        }
+
+        function handleFormSubmit() {
+            calculateSummary(true);
+            FoodSafe.toast(`${currentActiveShift} shift log saved to daily summary!`, 'success');
+        }
+
+        function calculateSummary(shouldSave = false) {
+            const dateVal = document.getElementById('summaryDate').value || new Date().toISOString().slice(0, 10);
+            const shiftVal = currentActiveShift;
+            const weatherVal = document.getElementById('weatherSelect').value;
+            const eventVal = document.getElementById('calendarEventSelect').value;
+
+            const foodMade = parseFloat(document.getElementById('foodMade').value) || 0;
+            const attendance = parseFloat(document.getElementById('attendance').value) || 0;
+            const foodConsumed = parseFloat(document.getElementById('foodConsumed').value) || 0;
+            const foodRedistributed = parseFloat(document.getElementById('foodRedistributed').value) || 0;
+            const costPerMeal = parseFloat(document.getElementById('costPerMeal').value) || 0;
+            const pricePerMeal = parseFloat(document.getElementById('pricePerMeal').value) || 0;
+
+            const surplus = Math.max(0, foodMade - foodConsumed);
+            const surplusEl = document.getElementById('surplus');
+            if (surplusEl) surplusEl.value = surplus;
+
+            const waste = Math.max(0, surplus - foodRedistributed);
+            const wasteInput = document.getElementById('waste');
+            if (wasteInput) wasteInput.value = waste;
+
+            const totalCost = foodMade * costPerMeal;
+            const totalRevenue = foodConsumed * pricePerMeal;
+            const netProfit = totalRevenue - totalCost;
+            const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100) : 0;
+
+            const surplusCost = surplus * costPerMeal;
+            const redistValueRescued = foodRedistributed * costPerMeal;
+            const wasteCostLoss = waste * costPerMeal;
+
+            const avoidedCo2FromRedist = foodRedistributed * CO2_FACTOR;
+            const totalPreserved = foodConsumed + foodRedistributed;
+            const totalAvoidedCo2 = totalPreserved * CO2_FACTOR;
+
+            const consumedPct = foodMade > 0 ? (foodConsumed / foodMade) * 100 : 0;
+            const redistPct = foodMade > 0 ? (foodRedistributed / foodMade) * 100 : 0;
+            const wastePct = foodMade > 0 ? (waste / foodMade) * 100 : 0;
+            const totalUtilizedPct = consumedPct + redistPct;
+
+            // KPI Cards Update
+            document.getElementById('kpiTotalCost').textContent = `₹${totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('kpiCostPerMealSub').textContent = `${foodMade} portions @ ₹${costPerMeal.toFixed(2)}/meal`;
+
+            document.getElementById('kpiTotalRevenue').textContent = `₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('kpiRevPerMealSub').textContent = `${foodConsumed} eaten @ ₹${pricePerMeal.toFixed(2)}/meal`;
+
+            const kpiProfitEl = document.getElementById('kpiProfit');
+            kpiProfitEl.textContent = `${netProfit >= 0 ? '+' : ''}₹${netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            kpiProfitEl.style.color = netProfit >= 0 ? 'var(--primary)' : '#dc2626';
+            document.getElementById('kpiProfitMarginSub').textContent = `${profitMargin >= 0 ? '+' : ''}${profitMargin.toFixed(1)}% profit margin`;
+
+            document.getElementById('kpiAvoidedCo2').textContent = `+${avoidedCo2FromRedist.toFixed(1)} kg CO2e`;
+            document.getElementById('kpiAvoidedCo2Sub').textContent = `${foodRedistributed} donated × 2.0 kg CO2`;
+
+            document.getElementById('kpiTotalCo2').textContent = `+${totalAvoidedCo2.toFixed(1)} kg CO2e`;
+
+            document.getElementById('kpiWasteLoss').textContent = `-₹${wasteCostLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('kpiWastePctSub').textContent = `${waste} portions (${wastePct.toFixed(1)}% waste)`;
+
+            // Visual Progress Bar Update
+            document.getElementById('barConsumed').style.width = `${Math.min(100, consumedPct)}%`;
+            document.getElementById('barRedistributed').style.width = `${Math.min(100, redistPct)}%`;
+            document.getElementById('barWaste').style.width = `${Math.min(100, wastePct)}%`;
+
+            document.getElementById('legendConsumed').textContent = `Consumed: ${foodConsumed} (${consumedPct.toFixed(1)}%)`;
+            document.getElementById('legendRedistributed').textContent = `Redistributed: ${foodRedistributed} (${redistPct.toFixed(1)}%)`;
+            document.getElementById('legendWaste').textContent = `Waste: ${waste} (${wastePct.toFixed(1)}%)`;
+            document.getElementById('legendTotalUtilized').textContent = `Total Utilized: ${totalUtilizedPct.toFixed(1)}%`;
+
+            // 10-Point Step Breakdown
+            const breakdownTable = document.getElementById('breakdownTableBody');
+            if (breakdownTable) {
+                breakdownTable.innerHTML = `
+                    <tr>
+                        <td><strong>1. How much food was made?</strong></td>
+                        <td>Total portions prepared for ${shiftVal}</td>
+                        <td>${foodMade} portions</td>
+                        <td><strong>₹${totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })} Total Cost</strong> (${foodMade} × ₹${costPerMeal.toFixed(2)})</td>
+                        <td><span class="badge badge-info">Total Cooked Volume</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. How many people came?</strong></td>
+                        <td>Guest turnout headcount</td>
+                        <td>${attendance} people</td>
+                        <td>—</td>
+                        <td><span class="badge badge-high">${foodMade > 0 ? ((attendance / foodMade) * 100).toFixed(1) : 0}% Turnout Ratio</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. How much food was consumed?</strong></td>
+                        <td>Portions sold and eaten by attendees</td>
+                        <td>${foodConsumed} portions</td>
+                        <td><strong style="color: #16a34a;">₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })} Sales</strong> (${foodConsumed} × ₹${pricePerMeal.toFixed(2)})</td>
+                        <td><span class="badge badge-high">Total Revenue Earned</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. How many portions are surplus?</strong></td>
+                        <td>Food Made (${foodMade}) - Food Consumed (${foodConsumed})</td>
+                        <td>${surplus} surplus portions</td>
+                        <td><strong>₹${surplusCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })} Surplus Prep Cost</strong> (${surplus} × ₹${costPerMeal.toFixed(2)})</td>
+                        <td><span class="badge ${surplus > 0 ? 'badge-warning' : 'badge-high'}">${surplus > 0 ? 'Extra Food Cooked' : 'Zero Surplus'}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. How much portion is redistributed?</strong></td>
+                        <td>Surplus portions donated to relief &amp; staff</td>
+                        <td>${foodRedistributed} portions donated</td>
+                        <td><strong style="color: #187F87;">+₹${redistValueRescued.toLocaleString('en-IN', { minimumFractionDigits: 2 })} Rescued Value</strong> (${foodRedistributed} × ₹${costPerMeal.toFixed(2)})</td>
+                        <td><span class="badge badge-high">Food Saved from Waste</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>6. How much portion is waste?</strong></td>
+                        <td>Overall Surplus (${surplus}) - Redistributed (${foodRedistributed})</td>
+                        <td>${waste} unrecovered portions</td>
+                        <td>—</td>
+                        <td><span class="badge ${waste > 0 ? 'badge-medium' : 'badge-high'}">${waste > 0 ? 'Unrecovered Food' : 'Zero Waste'}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>7. What is the loss from waste food?</strong></td>
+                        <td>Wasted portions (${waste}) × Prep cost (₹${costPerMeal.toFixed(2)})</td>
+                        <td>${waste} portions lost</td>
+                        <td><strong style="color: #dc2626;">-₹${wasteCostLoss.toLocaleString('en-IN', { minimumFractionDigits: 2 })} Direct Loss</strong></td>
+                        <td><span class="badge ${wasteCostLoss > 0 ? 'badge-danger' : 'badge-high'}">${wasteCostLoss > 0 ? 'Waste Financial Loss' : 'No Financial Waste'}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>8. How much profit did it generate?</strong></td>
+                        <td>Total Sales (₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}) - Total Cost (₹${totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })})</td>
+                        <td>${profitMargin >= 0 ? '+' : ''}${profitMargin.toFixed(1)}% Profit Margin</td>
+                        <td><strong style="color: ${netProfit >= 0 ? 'var(--primary)' : '#dc2626'};">${netProfit >= 0 ? '+' : ''}₹${netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })} Net Profit</strong></td>
+                        <td><span class="badge ${netProfit >= 0 ? 'badge-high' : 'badge-danger'}">${netProfit >= 0 ? 'Net Money Made' : 'Operational Deficit'}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>9. Avoided CO2 from Redistribution</strong></td>
+                        <td>${foodRedistributed} donated portions × 2.00 kg CO2 / kg food</td>
+                        <td>${foodRedistributed} portions rescued</td>
+                        <td><strong style="color: #187F87;">+${avoidedCo2FromRedist.toFixed(1)} kg CO2e Avoided</strong></td>
+                        <td><span class="badge badge-high">Landfill Methane Avoided</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>10. Total CO2 Saved from Food Made</strong></td>
+                        <td>(${foodConsumed} eaten + ${foodRedistributed} donated) × 2.00 kg CO2 / kg food</td>
+                        <td>${totalPreserved} total portions preserved</td>
+                        <td><strong style="color: #15803d;">+${totalAvoidedCo2.toFixed(1)} kg CO2e Avoided</strong></td>
+                        <td><span class="badge badge-high">${totalUtilizedPct.toFixed(1)}% Food Utilized</span></td>
+                    </tr>
+                `;
+            }
+
+            // Update Guidance Box
+            const warningEl = document.getElementById('warningOutput');
+            if (warningEl) {
+                warningEl.innerHTML = `
+                    <div class="guidance-box ${netProfit >= 0 ? 'guidance-optimal' : 'guidance-critical'}">
+                        <div class="guidance-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${netProfit >= 0 ? '#16a34a' : '#ef4444'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                ${netProfit >= 0 ? '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>' : '<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}
+                            </svg>
+                        </div>
+                        <div class="guidance-content">
+                            <h4>${shiftVal} Summary: ${netProfit >= 0 ? '+' : ''}₹${netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })} Profit &amp; ${foodRedistributed} Portions Rescued</h4>
+                            <p>You prepared <strong>${foodMade} portions</strong> for <strong>${attendance} attendees</strong> (total kitchen cost: <strong>₹${totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>) and sold <strong>${foodConsumed} portions</strong> for <strong>₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>, generating <strong>${netProfit >= 0 ? '+' : ''}₹${netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })} net profit</strong>. Out of <strong>${surplus} surplus portions</strong>, <strong>${foodRedistributed} portions</strong> were donated (saving ₹${redistValueRescued.toLocaleString('en-IN', { minimumFractionDigits: 2 })} worth of food), leaving unrecovered waste loss at <strong>${waste} portions (-₹${wasteCostLoss.toLocaleString('en-IN', { minimumFractionDigits: 2 })} loss)</strong> and avoiding <strong>${totalAvoidedCo2.toFixed(1)} kg CO2e</strong> in lifecycle emissions.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Sync to Meal Loop store
+            if (shouldSave) {
+                const shiftEntry = {
+                    date: dateVal,
+                    shift: shiftVal,
+                    weather: weatherVal,
+                    event: eventVal,
+                    attendance: attendance,
+                    foodMade: foodMade,
+                    foodConsumed: foodConsumed,
+                    surplus: surplus,
+                    foodRedistributed: foodRedistributed,
+                    waste: waste,
+                    costPerMeal: costPerMeal,
+                    pricePerMeal: pricePerMeal,
+                    totalRevenue: totalRevenue,
+                    totalCost: totalCost,
+                    profit: netProfit,
+                    avoidedCo2Redist: avoidedCo2FromRedist,
+                    avoidedCo2Total: totalAvoidedCo2,
+                    co2Saved: totalAvoidedCo2,
+                    source: FoodSafe.getKitchenSettings().dailySummaryMode === 'auto' ? 'Auto-POS Sync' : 'Manual'
+                };
+
+                FoodSafe.autoSaveShift(shiftVal, shiftEntry);
+                if (FoodSafe.saveMealLogAsync) {
+                    FoodSafe.saveMealLogAsync(shiftEntry);
+                }
+                renderHistoryTable();
+
+                const syncBadge = document.getElementById('syncStatusBox');
+                const syncText = document.getElementById('syncStatusText');
+                if (syncBadge && syncText) {
+                    syncText.textContent = `Synced ${shiftVal} Shift to Daily Store`;
+                    syncBadge.style.display = 'inline-flex';
+                    setTimeout(() => { syncBadge.style.display = 'none'; }, 3500);
+                }
+            }
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            if (!tbody) return;
+            const historyList = FoodSafe.getHistory(currentActiveShift);
+
+            if (!historyList || historyList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-weight: 500;">
+                            No daily shift summary logs found for ${currentActiveShift} Shift. Complete and save your shift log above to generate records.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const dayTags = [
+                'Today (Current Entry)',
+                'Yesterday (Previous Day -1)',
+                '2 Days Ago (Baseline -2)'
+            ];
+
+            tbody.innerHTML = historyList.map((item, idx) => {
+                const isToday = idx === 0;
+                const wastePct = item.foodMade > 0 ? ((item.waste / item.foodMade) * 100).toFixed(1) : '0.0';
+                const weatherClass = (item.weather || '').toLowerCase().includes('sun') ? 'badge-sunny' : 
+                                     ((item.weather || '').toLowerCase().includes('rain') ? 'badge-rainy' : 'badge-cloudy');
+                const co2Display = (item.avoidedCo2Total !== undefined ? item.avoidedCo2Total : (item.co2Saved !== undefined ? item.co2Saved : (item.foodConsumed * CO2_FACTOR))).toFixed(1);
+                const redistVal = item.foodRedistributed !== undefined ? item.foodRedistributed : 0;
+                const surplusVal = item.surplus !== undefined ? item.surplus : (item.foodMade - item.foodConsumed);
+                const comparisonLabel = dayTags[idx] || `Historical Day -${idx}`;
+
+                return `
+                    <tr class="${isToday ? 'row-active' : ''}">
+                        <td>
+                            <strong>${item.date} (${item.shift || currentActiveShift})</strong>
+                            <div class="row-sublabel ${isToday ? 'active' : ''}">
+                                ${comparisonLabel}
+                            </div>
+                        </td>
+                        <td><span class="badge ${weatherClass}">${item.weather || 'Sunny'}</span></td>
+                        <td><strong>${item.foodMade} meals</strong></td>
+                        <td><span class="badge-meals">${item.foodConsumed} meals</span></td>
+                        <td>
+                            <strong style="color: var(--primary);">${redistVal} meals</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">Surplus: ${surplusVal}</div>
+                        </td>
+                        <td><span class="badge ${parseFloat(wastePct) > 10 ? 'badge-danger' : (parseFloat(wastePct) > 5 ? 'badge-warning' : 'badge-high')}">${item.waste} (${wastePct}%)</span></td>
+                        <td style="color: #15803d; font-weight: 700;">+${co2Display} kg CO2e</td>
+                        <td style="color: ${item.profit >= 0 ? 'var(--primary)' : '#dc2626'}; font-weight: 700;">
+                            ${item.profit >= 0 ? '+' : ''}₹${(item.profit || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td>
+                            <span class="badge ${isToday ? 'badge-row-active' : 'badge-row-baseline'}">
+                                ${isToday ? 'Today (Active)' : `Baseline (Day -${idx})`}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openEodClosingModal() {
+            // Compute live calculations without triggering an extra database save
+            calculateSummary(false);
+
+            const dateVal = document.getElementById('summaryDate').value || new Date().toISOString().slice(0, 10);
+            const closeSummary = FoodSafe.closeDayAndCalibrateTomorrow(dateVal, currentActiveShift);
+
+            document.getElementById('eodTotalPrepared').textContent = `${closeSummary.totalPrepared} Meals`;
+            document.getElementById('eodTotalConsumed').textContent = `${closeSummary.totalConsumed} Meals`;
+            document.getElementById('eodTotalRescued').textContent = `${closeSummary.totalRedistributed} Meals`;
+            document.getElementById('eodTotalProfit').textContent = `${closeSummary.totalProfit >= 0 ? '+' : ''}₹${closeSummary.totalProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            
+            document.getElementById('eodTomorrowPredictionText').textContent = `${closeSummary.totalTomorrowPortions} Total Portions Planned`;
+            
+            const bPill = document.getElementById('eodShiftBreakfast');
+            const lPill = document.getElementById('eodShiftLunch');
+            const sPill = document.getElementById('eodShiftSnacks');
+            const dPill = document.getElementById('eodShiftDinner');
+            if (bPill) bPill.textContent = `🌅 Breakfast: ${closeSummary.breakfastPortions} meals`;
+            if (lPill) lPill.textContent = `☀️ Lunch: ${closeSummary.lunchPortions} meals`;
+            if (sPill) sPill.textContent = `☕ Snacks: ${closeSummary.snacksPortions} meals`;
+            if (dPill) dPill.textContent = `🌙 Dinner: ${closeSummary.dinnerPortions} meals`;
+
+            document.getElementById('eodTomorrowDateText').textContent = `Stored to Database: All 4 shifts stored in meal_forecasts table for ${closeSummary.tomorrowDate}.`;
+
+            const modal = document.getElementById('eodClosingModal');
+            if (modal) modal.style.display = 'flex';
+
+            renderHistoryTable();
+            syncHeaderDetails();
+            FoodSafe.toast(`Calibrated & stored entire day's 4 shifts for tomorrow (${closeSummary.tomorrowDate}) in database!`, 'success');
+        }
+
+        function closeEodModal() {
+            const modal = document.getElementById('eodClosingModal');
+            if (modal) modal.style.display = 'none';
+            
+            // Advance to the next shift
+            const shifts = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+            const currentIndex = shifts.indexOf(currentActiveShift);
+            if (currentIndex !== -1) {
+                const nextShift = shifts[(currentIndex + 1) % shifts.length];
+                selectShiftSummary(nextShift, true);
+                FoodSafe.toast(`Advanced to next shift: ${nextShift}`, 'info');
+            }
+        }
+
+        function exportSummaryCSV() {
+            const historyList = FoodSafe.getHistory();
+            const headers = ["Date & Shift", "Weather", "Event", "Attendance", "Prepared", "Consumed", "Redistributed", "Net Waste", "Cost (₹)", "Revenue (₹)", "Profit (₹)", "Avoided CO2 (kg)"];
+            const rows = historyList.map(h => [
+                `${h.date} (${h.shift || 'Lunch'})`,
+                h.weather || 'Sunny',
+                h.event || 'None',
+                h.attendance || 0,
+                h.foodMade || 0,
+                h.foodConsumed || 0,
+                h.foodRedistributed || 0,
+                h.waste || 0,
+                h.totalCost ? h.totalCost.toFixed(2) : '0.00',
+                h.totalRevenue ? h.totalRevenue.toFixed(2) : '0.00',
+                h.profit ? h.profit.toFixed(2) : '0.00',
+                (h.avoidedCo2Total || 0).toFixed(1)
+            ]);
+            FoodSafe.exportToCSV('Foodagement_Daily_Summary_Report', headers, rows);
+        }
+
+        function toggleDropdown(id) {
+            const dropdown = document.getElementById(id);
+            if (!dropdown) return;
+            const isVisible = dropdown.classList.contains('active');
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('active'));
+            if (!isVisible) dropdown.classList.add('active');
+        }
+
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-menu') && !e.target.closest('.icon-btn') && !e.target.closest('.user-profile-btn')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('active'));
+            }
+        });
+
+        function setDefaultDate() {
+            const today = new Date();
+            const dateInput = document.getElementById('summaryDate');
+            if (dateInput) {
+                dateInput.value = today.toISOString().slice(0, 10);
+            }
+
+            const liveDateEl = document.getElementById('liveCurrentDate');
+            if (liveDateEl) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                liveDateEl.textContent = today.toLocaleDateString('en-US', options);
+            }
+        }
+
+        function syncHeaderDetails() {
+            const session = FoodSafe.getSession();
+            const settings = FoodSafe.getKitchenSettings();
+            const notifs = FoodSafe.getNotifications();
+            const unreadCount = FoodSafe.getUnreadNotificationCount();
+
+            const name = session.name || settings.managerName || 'Kitchen Manager';
+            const userAvatar = document.getElementById('summaryUserAvatar');
+            const userName = document.getElementById('summaryUserName');
+            const dropName = document.getElementById('summaryDropName');
+            const dropRole = document.getElementById('summaryDropRole');
+            const notifBadge = document.getElementById('summaryNotifBadge');
+            const statusBadge = document.getElementById('summaryKitchenStatusBadge');
+            const statusText = document.getElementById('summaryKitchenStatusText');
+
+            if (typeof FoodSafeAvatars !== 'undefined') {
+                FoodSafeAvatars.syncAllAvatars();
+            } else if (userAvatar) {
+                userAvatar.textContent = name.replace(/Chef\s*/i, '').charAt(0).toUpperCase() || 'M';
+            }
+            if (userName) userName.textContent = name;
+            if (dropName) dropName.textContent = name;
+            if (dropRole) dropRole.textContent = session.role || 'Kitchen Manager';
+
+            if (notifBadge) {
+                notifBadge.textContent = unreadCount;
+                notifBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+            }
+
+            if (settings.status === 'closed') {
+                if (statusBadge) statusBadge.className = 'status-badge status-closed';
+                if (statusText) statusText.textContent = 'Kitchen Status: Closed';
+            } else {
+                if (statusBadge) statusBadge.className = 'status-badge status-open';
+                if (statusText) statusText.textContent = 'Kitchen Status: Open';
+            }
+
+            const notifContainer = document.getElementById('summaryNotifContainer');
+            if (notifContainer) {
+                if (notifs.length === 0) {
+                    notifContainer.innerHTML = '<div style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">No notifications.</div>';
+                } else {
+                    notifContainer.innerHTML = notifs.map(n => `
+                        <button type="button" class="dropdown-item" style="opacity: ${n.read ? '0.6' : '1.0'};">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.84rem; color: var(--text-main);">${n.title}</div>
+                                <div style="font-size: 0.74rem; color: var(--text-muted);">${n.detail}</div>
+                            </div>
+                        </button>
+                    `).join('');
+                }
+            }
+        }
+
+        function toggleKitchenStatus() {
+            FoodSafe.toggleKitchenStatus();
+            syncHeaderDetails();
+        }
+
+        function clearAllNotifications() {
+            FoodSafe.clearAllNotifications();
+            syncHeaderDetails();
+            FoodSafe.toast('Notifications cleared.', 'info');
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to end your session?')) {
+                FoodSafe.logout();
+                FoodSafe.toast('Logged out successfully.', 'info');
+                setTimeout(() => {
+                    window.location.href = '../login/login.html';
+                }, 400);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof FoodSafe !== 'undefined' && !FoodSafe.requireAuth('../login/login.html')) {
+                return;
+            }
+            FoodSafe.initTheme();
+            setDefaultDate();
+            syncHeaderDetails();
+            syncDailySummaryModeUI();
+
+            const initialTarget = FoodSafe.getTarget();
+            if (initialTarget && initialTarget.mealType) {
+                selectShiftSummary(initialTarget.mealType, false);
+            } else {
+                loadActiveShiftData();
+            }
+
+            // Init Supabase Realtime Sync
+            if (FoodSafe.initRealtimeSubscriptions) {
+                FoodSafe.initRealtimeSubscriptions();
+            }
+
+            // Realtime Sync Listener
+            window.addEventListener('foodsafe-data-updated', () => {
+                syncHeaderDetails();
+                
+                const target = FoodSafe.getTarget();
+                if (target && target.mealType) {
+                    selectShiftSummary(target.mealType, false);
+                } else {
+                    loadActiveShiftData();
+                }
+                FoodSafe.toast("Real-time update received!", "info", 2000);
+            });
+
+            // Real-time synchronization across pages and tabs
+            window.addEventListener('foodsafe-target-change', () => {
+                const target = FoodSafe.getTarget();
+                if (target && target.mealType) {
+                    selectShiftSummary(target.mealType, false);
+                } else {
+                    loadActiveShiftData();
+                }
+            });
+            window.addEventListener('foodsafe-settings-change', () => {
+                syncDailySummaryModeUI();
+                syncHeaderDetails();
+            });
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'foodsafe_forecast_target') {
+                    const target = FoodSafe.getTarget();
+                    if (target && target.mealType) {
+                        selectShiftSummary(target.mealType, false);
+                    } else {
+                        loadActiveShiftData();
+                    }
+                }
+                if (e.key === 'foodsafe_kitchen_settings') syncDailySummaryModeUI();
+            });
+        });
+    </script>
+</body>
+</html>

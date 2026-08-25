@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Loop - Meal Demand Overview</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('meal_system_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e) {}
+        })();
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chart-tooltip {
+            position: fixed;
+            display: none;
+            background: rgba(15, 23, 42, 0.95);
+            color: #ffffff;
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            pointer-events: none !important;
+            user-select: none;
+            z-index: 9999;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            white-space: nowrap;
+            transform: translate(14px, -36px);
+            transition: opacity 0.12s ease;
+        }
+
+        .chart-bar {
+            cursor: pointer;
+            transition: fill 0.18s ease, opacity 0.18s ease;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.88;
+            filter: brightness(1.1);
+        }
+
+        .btn-save-target {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 9px 18px;
+            background: #105e64;
+            color: #ffffff !important;
+            border: 1px solid #0e5359;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            line-height: 1.2;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 3px 10px rgba(16, 94, 100, 0.28);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .btn-save-target:hover {
+            background: #187F87;
+            border-color: #187F87;
+            color: #ffffff !important;
+            box-shadow: 0 5px 15px rgba(24, 127, 135, 0.38);
+            transform: translateY(-1px);
+        }
+
+        .btn-save-target:active {
+            background: #146c73;
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(16, 94, 100, 0.25);
+        }
+
+        .btn-save-target:focus-visible {
+            outline: 2px solid #187F87;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Taller Full-Height Side Panel Navigation -->
+        <aside class="side-panel">
+            <div class="side-panel-top">
+                <div class="side-panel-header">
+                    <div class="side-panel-logo" aria-label="Meal Loop Logo" title="Meal Loop - Kitchen &amp; Forecast Hub">
+                        <img src="logo.png" alt="Meal Loop Logo" class="side-panel-logo-img">
+                    </div>
+                    <div class="side-panel-brand">
+                        <span class="side-panel-title">Meal Loop</span>
+                        <span class="side-panel-subtitle">Kitchen &amp; Forecast Hub</span>
+                    </div>
+                </div>
+
+                <!-- Side Panel Primary Navigation Links -->
+                <nav class="side-panel-nav">
+                    <button type="button" id="navOverviewBtn" class="nav-btn active"
+                        onclick="switchMainView('overviewView', this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <rect width="7" height="9" x="3" y="3" rx="1" />
+                            <rect width="7" height="5" x="14" y="3" rx="1" />
+                            <rect width="7" height="9" x="14" y="12" rx="1" />
+                            <rect width="7" height="5" x="3" y="16" rx="1" />
+                        </svg>
+                        <span>Meal Overview</span>
+                    </button>
+
+                    <a href="meal_forecast_system.html#forecastView" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M3 3v18h18" />
+                            <path d="m19 9-5 5-4-4-3 3" />
+                        </svg>
+                        <span>Demand Forecast</span>
+                    </a>
+
+                    <a href="meal_forecast_system.html#surplusDistributionView" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            <path d="M9 12l2 2 4-4" />
+                        </svg>
+                        <span>Surplus, Safety &amp; Results</span>
+                    </a>
+
+                    <a href="meal_today_summery.html" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span>Daily Summary</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Bottom Side Panel Section: Divided Settings & Logout -->
+            <div class="side-panel-bottom">
+                <div class="side-panel-divider"></div>
+                <nav class="side-panel-nav" style="margin-top: 6px;">
+                    <button type="button" id="navSettingsBtn" class="nav-btn"
+                        onclick="switchMainView('settingsView', this)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        <span>System Settings</span>
+                    </button>
+                    <button type="button" class="nav-btn nav-btn-logout" onclick="handleLogout()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" x2="9" y1="12" y2="12" />
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper with Integrated Header & Content Area -->
+        <div class="main-wrapper">
+            <!-- Integrated Top Header Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <div class="top-bar-date">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                            <line x1="16" x2="16" y1="2" y2="6" />
+                            <line x1="8" x2="8" y1="2" y2="6" />
+                            <line x1="3" x2="21" y1="10" y2="10" />
+                        </svg>
+                        <span id="headerLiveDate">Sunday, August 15, 2026</span>
+                    </div>
+
+                    <div class="top-divider"></div>
+
+                    <span class="status-badge status-open" id="headerKitchenStatusBadge" ondblclick="toggleKitchenStatus()" style="cursor: pointer; user-select: none;" title="Double-click to toggle Kitchen Status (Open/Closed)">
+                        <span class="status-dot"></span>
+                        <span id="headerKitchenStatusText">Kitchen Status: Open</span>
+                    </span>
+                </div>
+
+                <div class="top-bar-right">
+                    <!-- Notification Button -->
+                    <div style="position: relative;">
+                        <button type="button" class="icon-btn" id="notifBtn" onclick="toggleDropdown('notifDropdown')"
+                            title="Notifications">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                            </svg>
+                            <span class="icon-badge" id="notifBadgeCount">2</span>
+                        </button>
+
+                        <div class="dropdown-menu" id="notifDropdown">
+                            <div style="padding: 8px 16px; font-weight: 700; font-size: 0.85rem; color: var(--primary-dark); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                                <span>Recent Notifications</span>
+                                <a href="javascript:void(0)" onclick="clearAllNotifications()" style="font-size: 0.72rem; color: var(--primary); text-decoration: none;">Clear All</a>
+                            </div>
+                            <div id="notifListContainer">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Theme Toggle Button -->
+                    <button type="button" class="icon-btn theme-toggle-btn" id="themeQuickToggleBtn" onclick="FoodSafe.toggleTheme()" title="Toggle Dark / Light Mode" aria-label="Toggle Theme">
+                        <svg class="theme-icon-light" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                        </svg>
+                        <svg class="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Settings Quick Button -->
+                    <button type="button" class="icon-btn" onclick="openSettingsView()" title="Settings">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+
+                    <!-- User Profile Dropdown -->
+                    <div style="position: relative;">
+                        <button type="button" class="user-profile-btn" onclick="toggleDropdown('userDropdown')">
+                            <div class="user-avatar" id="headerUserAvatar">M</div>
+                            <span class="user-name" id="headerUserName">Kitchen Manager</span>
+                            <svg class="user-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </button>
+
+                        <div class="dropdown-menu" id="userDropdown">
+                            <div style="padding: 8px 14px; border-bottom: 1px solid var(--border-color);">
+                                <div style="font-weight: 700; font-size: 0.84rem; color: var(--text-main);" id="dropdownUserName">Kitchen Manager</div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted);" id="dropdownUserRole">Kitchen Administrator</div>
+                            </div>
+                            <button type="button" class="dropdown-item" onclick="FoodSafeAvatars.openPicker()">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                <span>Choose Profile Avatar</span>
+                            </button>
+                            <button type="button" class="dropdown-item" onclick="openSettingsView()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                <span>Change Password</span>
+                            </button>
+                            <button type="button" class="dropdown-item" onclick="handleSwitchKitchen()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                                <span>Switch Kitchen Unit</span>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button type="button" class="dropdown-item" style="color: #ef4444;"
+                                onclick="handleLogout()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                    <polyline points="16 17 21 12 16 7" />
+                                    <line x1="21" x2="9" y1="12" y2="12" />
+                                </svg>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- VIEW 1: Main Meal Overview -->
+                <div id="overviewView" class="view-panel active">
+                    <div style="margin-bottom: 20px;">
+                        <h1 style="margin: 0;">Meal Demand Overview</h1>
+                    </div>
+
+                    <div class="unified-card">
+                        <!-- SUBSECTION 1: Transposed Last 3 Days History Table -->
+                        <div>
+                            <div class="card-section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <span>Last 3 Days Consumption History</span>
+                                    <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Daily logs &amp; turnout records</span>
+                                </div>
+                                <div class="history-shift-toggle-group">
+                                    <span class="history-shift-label">Shift:</span>
+                                    <div class="history-shift-pills">
+                                        <button type="button" class="history-shift-pill" id="btnHistShiftBreakfast" onclick="setHistoryShift('Breakfast')" title="View previous 3 days of Breakfast">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                                            <span>Breakfast</span>
+                                        </button>
+                                        <button type="button" class="history-shift-pill active" id="btnHistShiftLunch" onclick="setHistoryShift('Lunch')" title="View previous 3 days of Lunch">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                                            <span>Lunch</span>
+                                        </button>
+                                        <button type="button" class="history-shift-pill" id="btnHistShiftSnacks" onclick="setHistoryShift('Snacks')" title="View previous 3 days of Snacks">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                                            <span>Snacks</span>
+                                        </button>
+                                        <button type="button" class="history-shift-pill" id="btnHistShiftDinner" onclick="setHistoryShift('Dinner')" title="View previous 3 days of Dinner">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                                            <span>Dinner</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table class="transposed-table">
+                                <thead>
+                                    <tr id="histTableHeadRow">
+                                        <th>Parameter</th>
+                                        <th colspan="3">Historical Shift Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="histTableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align:center; padding:32px 20px; color:var(--text-muted);">
+                                            <div style="font-weight:600; margin-bottom:6px; color:var(--text-main);">No Consumption History Found</div>
+                                            <div style="font-size:0.85rem;">Complete and log your first shift summary to populate real-time trends and analysis.</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-section-divider"></div>
+
+                        <!-- SUBSECTION 2: Today's Prediction & Side AI Recommendation Box -->
+                        <div>
+                            <div class="card-section-title">
+                                <span id="predictionSectionTitle">Today's Demand Prediction &amp; Resource Planning</span>
+                                <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Automated portion &amp; ingredient calculator</span>
+                            </div>
+
+                            <div class="prediction-grid-layout">
+                                <!-- Left / Main Column: Required Portions & Queued Sources List -->
+                                <div>
+                                    <!-- Portions Required Banner -->
+                                    <div class="kpi-banner" style="margin-bottom: 14px;">
+                                        <div>
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                                                <div class="kpi-banner-title" id="kpiBannerShiftTitle">Required Food Portions to Cook Today (Lunch Service)</div>
+                                                <span class="kpi-mode-badge badge-ai" id="kpiModeBadge">AI Recommended</span>
+                                            </div>
+                                            <div class="kpi-banner-subtitle" id="kpiBannerSubtitle">Estimated serving volume for Lunch Service calculated from AI predictive engine</div>
+                                        </div>
+                                        <div class="kpi-banner-value">
+                                             <span id="portionCount">102</span> <span>portions</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Demand Source Toggle & Manual Input Control -->
+                                    <div class="demand-source-container">
+                                        <div class="demand-source-header">
+                                            <div class="demand-source-title">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                                <span>Demand Source:</span>
+                                            </div>
+                                            <div class="demand-source-radios" role="radiogroup" aria-label="Demand Calculation Source">
+                                                <label class="demand-radio-pill active" id="labelRadioAi" onclick="setDemandSource('ai')">
+                                                    <input type="radio" name="demandSource" id="radioAi" value="ai" checked style="display:none;">
+                                                    <span class="demand-status-dot dot-ai"></span>
+                                                    <span>AI Recommended</span>
+                                                </label>
+                                                <label class="demand-radio-pill" id="labelRadioManual" onclick="setDemandSource('manual')">
+                                                    <input type="radio" name="demandSource" id="radioManual" value="manual" style="display:none;">
+                                                    <span class="demand-status-dot dot-manual"></span>
+                                                    <span>Manual Input</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Manual Portion & Persons Input Box (visible when Manual mode is active) -->
+                                        <div class="manual-portion-box" id="manualPortionBox" style="display: none;">
+                                            <!-- Sub-Type Mode Selector: Single Choice Option (Number of Persons OR Amount of Portions) -->
+                                            <div class="manual-type-selector">
+                                                <span class="manual-type-label">Input by:</span>
+                                                <div class="manual-type-pills" role="radiogroup" aria-label="Manual Demand Input Type">
+                                                    <button type="button" class="manual-type-pill active" id="btnManualTypePersons" onclick="setManualInputType('persons')">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                                        <span>Number of Persons</span>
+                                                    </button>
+                                                    <button type="button" class="manual-type-pill" id="btnManualTypePortions" onclick="setManualInputType('portions')">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                                                        <span>Amount of Portions</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="manual-input-group">
+                                                <!-- 1. Number of Persons Input (Active when 'persons' selected) -->
+                                                <div class="manual-input-wrapper" id="wrapperPersonsInput">
+                                                    <label for="manualPersonsInput" class="manual-input-label">Number of Persons</label>
+                                                    <div class="manual-number-field">
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                                        <input type="number" id="manualPersonsInput" min="1" step="1" placeholder="e.g. 100" onkeydown="if(event.key==='Enter') applyManualPortions()">
+                                                        <span class="manual-input-unit">people</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 2. Manual Portions Input (Active when 'portions' selected) -->
+                                                <div class="manual-input-wrapper" id="wrapperPortionsInput" style="display: none;">
+                                                    <label for="manualPortionInput" class="manual-input-label">Amount of Portions</label>
+                                                    <div class="manual-number-field">
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                                                        <input type="number" id="manualPortionInput" min="1" step="1" placeholder="e.g. 102" onkeydown="if(event.key==='Enter') applyManualPortions()">
+                                                        <span class="manual-input-unit">portions</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 3. Apply Button -->
+                                                <button type="button" class="btn-apply-manual-portions" id="btnApplyManualPortions" onclick="applyManualPortions()">
+                                                    <span id="btnApplyManualText">Apply Demand</span>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="manual-portion-hint" id="manualPortionHint">
+                                                <span>Input headcount (number of persons) to calculate meal demand and raw ingredients.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Queued List of Cooking Sources (Side-by-side List) -->
+                                    <div>
+                                        <div style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 6px;">
+                                            Required Cooking Sources &amp; Raw Ingredients (Prep Queue)
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                                            Calculated ingredients needed based on portion demand
+                                        </div>
+
+                                        <div class="sources-queue-list" id="sourcesQueueList">
+                                            <div class="source-queue-row">
+                                                <div class="source-info-col">
+                                                    <span class="source-name">Rice / Grains</span>
+                                                    <span class="source-subtext">Standard requirement: 150g per portion</span>
+                                                </div>
+                                                <div class="source-qty-col">
+                                                    <span class="source-qty" id="resRice">15.3 kg</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="source-queue-row">
+                                                <div class="source-info-col">
+                                                    <span class="source-name">Dal &amp; Lentils</span>
+                                                    <span class="source-subtext">Standard requirement: 80g per portion</span>
+                                                </div>
+                                                <div class="source-qty-col">
+                                                    <span class="source-qty" id="resDal">8.2 kg</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="source-queue-row">
+                                                <div class="source-info-col">
+                                                    <span class="source-name">Fresh Vegetables</span>
+                                                    <span class="source-subtext">Mixed seasonal vegetables: 120g per portion</span>
+                                                </div>
+                                                <div class="source-qty-col">
+                                                    <span class="source-qty" id="resVeg">12.2 kg</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="source-queue-row">
+                                                <div class="source-info-col">
+                                                    <span class="source-name">Cooking Oil &amp; Condiments</span>
+                                                    <span class="source-subtext">Refined oil, ghee &amp; spices: 25ml per portion</span>
+                                                </div>
+                                                <div class="source-qty-col">
+                                                    <span class="source-qty" id="resOil">2.6 L</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="source-queue-row">
+                                                <div class="source-info-col">
+                                                    <span class="source-name">Wheat Flour (Chapatis)</span>
+                                                    <span class="source-subtext" id="resChapatis">204 chapatis (2 per portion)</span>
+                                                </div>
+                                                <div class="source-qty-col">
+                                                    <span class="source-qty" id="resFlour">10.2 kg</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Small Side AI Recommendation & Calendar Event Box -->
+                                <aside class="side-ai-box">
+                                    <div class="side-ai-header">
+                                        <span class="side-ai-title">AI Recommendation</span>
+                                        <span class="side-ai-badge">Auto Applied</span>
+                                    </div>
+
+                                    <div class="side-ai-list">
+                                        <div class="side-ai-item">
+                                            <span>Weather Impact:</span>
+                                            <strong id="sideAiWeatherText">Sunny (Normal)</strong>
+                                        </div>
+                                        <div class="side-ai-item">
+                                            <span>Historical Avg:</span>
+                                            <strong id="sideAiAvgText">88.3 meals</strong>
+                                        </div>
+                                        <div class="side-ai-item">
+                                            <span>Expected Attendance:</span>
+                                            <strong id="sideAiAttendanceText">100 people</strong>
+                                        </div>
+                                        <div class="side-ai-item">
+                                            <span>Baseline Demand:</span>
+                                            <strong id="sideAiBaselineDemand">102 portions</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="side-ai-control-group" style="margin-bottom: 12px;">
+                                        <label for="overviewWeatherSelect">Live Weather Condition:</label>
+                                        <select id="overviewWeatherSelect" onchange="handleOverviewWeatherChange(this.value)">
+                                            <option value="sunny">Sunny (Normal Demand)</option>
+                                            <option value="cloudy">Cloudy (Normal Demand)</option>
+                                            <option value="rainy">Rainy (+5% Hot Meal Surge)</option>
+                                            <option value="snowy">Snowy (+10% Hot Meal Surge)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="side-ai-control-group">
+                                        <label for="eventAdjustment">Implement Calendar Event / Holiday?</label>
+                                        <select id="eventAdjustment" onchange="handleOverviewEventChange(this.value)">
+                                            <option value="none">None (Regular Day) - Standard Demand</option>
+                                            <option value="holiday">Holiday - Reduced (-25%)</option>
+                                            <option value="exam">Exam Period - Higher (+15%)</option>
+                                            <option value="vacation">Vacation/Break - Low (-40%)</option>
+                                            <option value="special">Special Event - Extra (+30%)</option>
+                                        </select>
+                                        <span class="side-ai-hint">Select a calendar event to adjust required preparation volume accordingly.</span>
+                                    </div>
+
+                                    <!-- Disaster Relief & Local NGO Donation Hub -->
+                                    <div class="disaster-ngo-section">
+                                        <div class="disaster-alert-card" id="disasterAlertCard">
+                                            <div class="disaster-alert-header">
+                                                <span class="disaster-alert-title" id="disasterAlertTitle">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                                        <line x1="12" y1="9" x2="12" y2="13" />
+                                                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                                                    </svg>
+                                                    <span id="disasterAlertTitleText">Nearby Disaster Alert</span>
+                                                </span>
+                                                <span class="badge badge-danger" id="disasterAlertBadge" style="font-size: 0.65rem; padding: 2px 7px;">~16 km away</span>
+                                            </div>
+                                            <div class="disaster-alert-desc" id="disasterAlertDesc">
+                                                <strong id="disasterTypeHeading">Urban Flash Waterlogging &amp; Evacuation Relief</strong>: <span id="disasterIncidentBody">1,450+ displaced persons in emergency camps need hot meals &amp; dry ration packets.</span>
+                                                <div id="disasterPostalDetails" style="margin-top: 5px; font-size: 0.72rem; color: #0284c7; font-weight: 500;">
+                                                    📍 Postal Sector: 560001 (Karnataka Zone) • Active Relief Network
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Dual Getty Images -->
+                                        <div class="relief-gallery-grid">
+                                            <div class="relief-img-card">
+                                                <img src="gettyimages-1529848141-612x612.jpg" alt="Disaster Food Relief Distribution">
+                                                <div class="relief-img-tag" id="reliefDriveTag">Relief Food Drive</div>
+                                            </div>
+                                            <div class="relief-img-card">
+                                                <img src="gettyimages-2249091040-612x612.jpg" alt="NGO Emergency Ration Packaging">
+                                                <div class="relief-img-tag">Emergency Rations</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- QR Code Donation Box -->
+                                        <div class="ngo-qr-box">
+                                            <svg class="qr-code-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                                <rect width="100" height="100" fill="#ffffff" rx="4" />
+                                                <rect x="8" y="8" width="24" height="24" fill="#0f172a" rx="2" />
+                                                <rect x="12" y="12" width="16" height="16" fill="#ffffff" rx="1" />
+                                                <rect x="16" y="16" width="8" height="8" fill="#0f172a" rx="1" />
+                                                <rect x="68" y="8" width="24" height="24" fill="#0f172a" rx="2" />
+                                                <rect x="72" y="12" width="16" height="16" fill="#ffffff" rx="1" />
+                                                <rect x="76" y="16" width="8" height="8" fill="#0f172a" rx="1" />
+                                                <rect x="8" y="68" width="24" height="24" fill="#0f172a" rx="2" />
+                                                <rect x="12" y="72" width="16" height="16" fill="#ffffff" rx="1" />
+                                                <rect x="16" y="76" width="8" height="8" fill="#0f172a" rx="1" />
+                                                <rect x="36" y="10" width="4" height="4" fill="#0f172a" />
+                                                <rect x="44" y="10" width="4" height="4" fill="#0f172a" />
+                                                <rect x="52" y="10" width="4" height="4" fill="#0f172a" />
+                                                <rect x="60" y="10" width="4" height="4" fill="#0f172a" />
+                                                <rect x="36" y="18" width="4" height="4" fill="#0f172a" />
+                                                <rect x="48" y="18" width="4" height="4" fill="#0f172a" />
+                                                <rect x="56" y="18" width="4" height="4" fill="#0f172a" />
+                                                <rect x="38" y="38" width="24" height="24" fill="#ffffff" rx="4" stroke="#e2e8f0" stroke-width="1.5" />
+                                                <rect x="41" y="41" width="18" height="18" fill="#16a34a" rx="3" />
+                                            </svg>
+                                            <div class="ngo-qr-title" id="ngoQrTitle">Real-Time Disaster Relief Hub</div>
+                                            <div class="ngo-qr-subtext" id="ngoQrSubtext">
+                                                Direct connection to verified local NGOs &amp; Disaster Relief Camps in your postal sector.
+                                            </div>
+                                            <button type="button" class="donate-btn" onclick="triggerDonationModal()">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                                                </svg>
+                                                <span>Connect Relief Camps &amp; Donate</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </aside>
+                            </div>
+                        </div>
+
+                        <!-- AMBIENT VIDEO BANNER -->
+                        <div class="theater-video-banner theater-mode" id="theaterVideoBanner">
+                            <video id="localVideoPlayer" class="theater-video-element"
+                                src="Save Food Asia-Pacific Campaign PSA (english).mp4" autoplay loop muted playsinline
+                                preload="auto"></video>
+
+                            <div class="theater-video-overlay-gradient"></div>
+
+                            <div class="theater-video-controls">
+                                <button type="button" id="videoMuteBtn" class="theater-btn" onclick="toggleVideoAudio()" title="Mute / Unmute">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                                    <span class="btn-text">Unmute</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card-section-divider"></div>
+
+                        <!-- SUBSECTION 3: Consumption Statistics & Historical Trend -->
+                        <div style="position: relative;">
+                            <div class="card-section-title">
+                                <span>Consumption Statistics &amp; Historical Trend</span>
+                                <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Historical usage variance &amp; current projection</span>
+                            </div>
+
+                            <!-- Floating Tooltip for Chart -->
+                            <div id="chartTooltip" class="chart-tooltip"></div>
+
+                            <!-- Statistical KPI Summary -->
+                            <div class="stats-summary-grid">
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Historical Average</div>
+                                    <div class="stat-item-val" id="statHistAvg">88.3 Meals</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Historical Peak</div>
+                                    <div class="stat-item-val" id="statHistPeak">105 Meals</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Historical Minimum</div>
+                                    <div class="stat-item-val" id="statHistMin">75 Meals</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Latest Attendance</div>
+                                    <div class="stat-item-val" id="statHistAttendance">100 People</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Target To Cook</div>
+                                    <div id="statTargetVal" class="stat-item-val" style="color: var(--primary);">102 Portions</div>
+                                </div>
+                            </div>
+
+                            <!-- Clean SVG Chart -->
+                            <div class="chart-wrapper">
+                                <svg class="chart-svg" id="consumptionChartSvg" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Background & Gridlines -->
+                                    <g id="chartGridlines">
+                                        <line x1="60" y1="230" x2="560" y2="230" stroke="#94a3b8" stroke-width="1.5" />
+                                        <line x1="60" y1="185" x2="560" y2="185" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                                        <line x1="60" y1="140" x2="560" y2="140" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                                        <line x1="60" y1="95" x2="560" y2="95" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                                        <line x1="60" y1="50" x2="560" y2="50" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                                    </g>
+
+                                    <!-- Y-axis Scale Labels -->
+                                    <g id="chartYLabels">
+                                        <text x="45" y="234" text-anchor="end" font-size="11" fill="#64748b" font-weight="500">0</text>
+                                        <text x="45" y="189" text-anchor="end" font-size="11" fill="#64748b" font-weight="500">30</text>
+                                        <text x="45" y="144" text-anchor="end" font-size="11" fill="#64748b" font-weight="500">60</text>
+                                        <text x="45" y="99" text-anchor="end" font-size="11" fill="#64748b" font-weight="500">90</text>
+                                        <text x="45" y="54" text-anchor="end" font-size="11" fill="#64748b" font-weight="500">120</text>
+                                    </g>
+
+                                    <!-- Average Reference Line -->
+                                    <line id="avgLine" x1="55" y1="83" x2="570" y2="83" stroke="#64748b" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.85" />
+                                    
+                                    <!-- Dedicated Average Indicator Badge (Right aligned, zero collision with bars) -->
+                                    <g id="avgBadgeGroup">
+                                        <rect id="avgBadgeBg" x="436" y="72" width="128" height="22" rx="11" fill="var(--bg-card, #ffffff)" stroke="#64748b" stroke-width="1.2" style="filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1));" />
+                                        <text id="avgLineText" x="500" y="87" text-anchor="middle" font-size="10" fill="#475569" font-weight="700">Avg (88.3)</text>
+                                    </g>
+
+                                    <!-- Dynamic Bars Container -->
+                                    <g id="historicalChartBars">
+                                        <!-- Bars rendered dynamically -->
+                                    </g>
+                                </svg>
+
+                                <!-- Professional Chart Legend -->
+                                <div class="chart-legend">
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #187F87;"></div>
+                                        <span>Historical Consumption (Meals)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #105e64;"></div>
+                                        <span>Today's Target Portion</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div style="width: 18px; height: 2px; border-top: 2px dashed #64748b;"></div>
+                                        <span id="chartLegendAvgText">Historical Average Line</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: System Settings View -->
+                <div id="settingsView" class="view-panel" style="padding-bottom: 0;">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+                        <div>
+                            <h1 style="margin-bottom: 2px; font-size: 1.35rem;">System Settings &amp; Preferences</h1>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Manage kitchen
+                                operations, user identity, themes, and automation modes</p>
+                        </div>
+                        <button type="button" class="nav-btn"
+                            style="width: auto; padding: 7px 14px; font-size: 0.82rem; background: rgba(16, 94, 100, 0.9); color: #ffffff;"
+                            onclick="switchMainView('overviewView', document.getElementById('navOverviewBtn'))">
+                            &larr; Back to Overview
+                        </button>
+                    </div>
+
+                    <div class="settings-single-card">
+                        <div class="settings-two-col-layout">
+                            <!-- LEFT COLUMN: System Controls & Automation -->
+                            <div class="settings-column">
+                                <!-- 1. Appearance & Theme Setting -->
+                                <div class="settings-section">
+                                    <div class="settings-section-header">
+                                        <div class="settings-section-title">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="4" />
+                                                <path d="M12 2v2" />
+                                                <path d="M12 20v2" />
+                                                <path d="m4.93 4.93 1.41 1.41" />
+                                                <path d="m17.66 17.66 1.41 1.41" />
+                                                <path d="M2 12h2" />
+                                                <path d="M20 12h2" />
+                                                <path d="m6.34 17.66-1.41 1.41" />
+                                                <path d="m19.07 4.93-1.41 1.41" />
+                                            </svg>
+                                            1. Appearance &amp; Interface Theme
+                                        </div>
+                                        <p class="settings-section-desc">Select visual color theme for charts and
+                                            controls.</p>
+                                    </div>
+
+                                    <div class="theme-toggle-compact">
+                                        <button type="button" id="themeLightBtn" class="theme-option-btn-compact active"
+                                            onclick="setAppTheme('light')">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="4" />
+                                                <path d="M12 2v2" />
+                                                <path d="M12 20v2" />
+                                                <path d="m4.93 4.93 1.41 1.41" />
+                                                <path d="m17.66 17.66 1.41 1.41" />
+                                                <path d="M2 12h2" />
+                                                <path d="M20 12h2" />
+                                                <path d="m6.34 17.66-1.41 1.41" />
+                                                <path d="m19.07 4.93-1.41 1.41" />
+                                            </svg>
+                                            <span>Light Mode</span>
+                                        </button>
+
+                                        <button type="button" id="themeDarkBtn" class="theme-option-btn-compact"
+                                            onclick="setAppTheme('dark')">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                                            </svg>
+                                            <span>Dark Mode</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <hr class="settings-divider">
+
+                                <!-- 2. Kitchen Operation Status & Standards -->
+                                <div class="settings-section">
+                                    <div class="settings-section-header">
+                                        <div class="settings-section-title">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                                                <path d="M3 6h18" />
+                                                <path d="M16 10a4 4 0 0 1-8 0" />
+                                            </svg>
+                                            2. Kitchen Operations &amp; Portion Weight
+                                        </div>
+                                        <p class="settings-section-desc">Manage operational availability and standard
+                                            portion weight calculation.</p>
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                        <div class="settings-field-compact">
+                                            <label for="kitchenStateSelect">Operational Status:</label>
+                                            <select id="kitchenStateSelect" onchange="updateKitchenStatus(this.value)">
+                                                <option value="open">Open (Active Service)</option>
+                                                <option value="closed">Closed (Maintenance)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="settings-field-compact">
+                                            <div
+                                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                                                <label for="settingMealSize" style="margin-bottom: 0;">Portion
+                                                    Weight:</label>
+                                                <button type="button" id="portionSyncModeBtn"
+                                                    onclick="togglePortionWeightSyncMode()"
+                                                    style="background: none; border: none; font-size: 0.72rem; color: var(--primary, #187F87); font-weight: 700; cursor: pointer; padding: 0;"
+                                                    title="Click to toggle between Automatic Sync with Meal Overview and Manual mode">
+                                                    <span id="portionSyncModeBadge"
+                                                        style="background: rgba(24, 127, 135, 0.12); padding: 1px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">⚡
+                                                        Auto-Sync</span>
+                                                </button>
+                                            </div>
+                                            <div style="position: relative; display: flex; align-items: center;">
+                                                <input type="number" id="settingMealSize" value="350" min="200"
+                                                    max="600" oninput="handleManualMealSizeInput()"
+                                                    style="padding-right: 58px;">
+                                                <span id="portionSyncUnitText"
+                                                    style="position: absolute; right: 8px; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); pointer-events: none;">g
+                                                    (Auto)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="settings-divider">
+
+                                <!-- 3. Daily Summary Logging Mode -->
+                                <div class="settings-section">
+                                    <div class="settings-section-header">
+                                        <div class="settings-section-title">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path
+                                                    d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                                <polyline points="14 2 14 8 20 8" />
+                                                <line x1="16" y1="13" x2="8" y2="13" />
+                                                <line x1="16" y1="17" x2="8" y2="17" />
+                                                <line x1="10" y1="9" x2="8" y2="9" />
+                                            </svg>
+                                            3. Daily Summary Logging Mode
+                                        </div>
+                                        <p class="settings-section-desc">Shift volume synchronization method.</p>
+                                    </div>
+
+                                    <div class="summary-mode-compact">
+                                        <button type="button" id="summaryModeAutoBtn"
+                                            class="summary-mode-btn-compact active"
+                                            onclick="setDailySummaryMode('auto')">
+                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                                                </svg>
+                                                <strong style="font-size: 0.8rem;">Auto Sync</strong>
+                                            </div>
+                                            <span
+                                                style="font-size: 0.71rem; color: var(--text-muted); line-height: 1.2;">Auto-captures
+                                                shift logs</span>
+                                        </button>
+
+                                        <button type="button" id="summaryModeManualBtn" class="summary-mode-btn-compact"
+                                            onclick="setDailySummaryMode('manual')">
+                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path
+                                                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                </svg>
+                                                <strong style="font-size: 0.8rem;">Manual Entry</strong>
+                                            </div>
+                                            <span
+                                                style="font-size: 0.71rem; color: var(--text-muted); line-height: 1.2;">Manual
+                                                entry by manager</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT COLUMN: Manager Profile, Avatar & Security -->
+                            <div class="settings-column">
+                                <div class="settings-section">
+                                    <div class="settings-section-header">
+                                        <div class="settings-section-title">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                                <circle cx="12" cy="7" r="4" />
+                                            </svg>
+                                            4. Manager Profile &amp; Kitchen Identity
+                                        </div>
+                                        <p class="settings-section-desc">Manage chef avatar, facility details, and
+                                            credentials.</p>
+                                    </div>
+
+                                    <!-- Compact Avatar Customizer Widget -->
+                                    <div class="settings-avatar-widget"
+                                        style="padding: 8px 12px; margin-bottom: 2px; gap: 12px;">
+                                        <div class="settings-avatar-circle-wrapper"
+                                            onclick="FoodSafeAvatars.openPicker()" style="cursor: pointer;"
+                                            title="Click to choose avatar">
+                                            <div class="settings-avatar-circle foodsafe-avatar-sync-target"
+                                                data-avatar-size="46" style="width: 46px; height: 46px;"></div>
+                                            <div class="settings-avatar-edit-badge"
+                                                style="width: 18px; height: 18px; bottom: -1px; right: -1px;"
+                                                title="Change Avatar">
+                                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2.5">
+                                                    <path d="M12 20h9" />
+                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div class="settings-avatar-meta" style="flex: 1;">
+                                            <div
+                                                style="display: flex; align-items: center; justify-content: space-between;">
+                                                <div>
+                                                    <div
+                                                        style="font-size: 0.66rem; text-transform: uppercase; font-weight: 700; color: var(--primary); letter-spacing: 0.05em;">
+                                                        Kitchen Identity</div>
+                                                    <div class="settings-avatar-name foodsafe-avatar-name-target"
+                                                        style="font-size: 0.92rem; font-weight: 700; line-height: 1.2;">
+                                                        Chef Mia</div>
+                                                </div>
+                                                <button type="button" class="btn-change-avatar"
+                                                    style="padding: 4px 10px; font-size: 0.75rem;"
+                                                    onclick="FoodSafeAvatars.openPicker()"
+                                                    title="Change Profile Avatar">Change Avatar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <form id="settingsProfileForm" onsubmit="handleSaveSettings(event)"
+                                        style="display: flex; flex-direction: column; gap: 8px;">
+                                        <div class="settings-form-grid-compact">
+                                            <div class="settings-field-compact">
+                                                <label for="settingManagerName">Manager Name:</label>
+                                                <input type="text" id="settingManagerName" placeholder="Enter manager name" required>
+                                            </div>
+                                            <div class="settings-field-compact">
+                                                <label for="settingKitchenName">Kitchen Name:</label>
+                                                <input type="text" id="settingKitchenName" placeholder="Enter kitchen name"
+                                                    required>
+                                            </div>
+                                            <div class="settings-field-compact">
+                                                <label for="settingFssaiId">FSSAI License ID:</label>
+                                                <input type="text" id="settingFssaiId" placeholder="14-digit FSSAI" readonly
+                                                    style="background: rgba(100, 116, 139, 0.08); cursor: not-allowed;">
+                                            </div>
+                                            <div class="settings-field-compact">
+                                                <label for="settingNewPassword">New Password:</label>
+                                                <input type="password" id="settingNewPassword"
+                                                    placeholder="Enter new password">
+                                            </div>
+                                        </div>
+
+                                        <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                                            <button type="submit" class="btn-save-target"
+                                                style="padding: 9px 18px; font-size: 0.85rem; width: 100%;">
+                                                Save Settings &amp; Preferences
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Supabase JS Client & Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabaseClient.js"></script>
+    <!-- Core State & Avatar Scripts -->
+    <script src="../shared_foodsafe.js"></script>
+    <script src="foodsafe_avatars.js"></script>
+    <script>
+        // Demand Source State & Modifiers
+        let demandSourceMode = 'ai'; // 'ai' or 'manual'
+        let manualInputType = 'persons'; // 'persons' or 'portions'
+        let currentHistoryShift = 'Lunch'; // 'Breakfast', 'Lunch', 'Snacks', 'Dinner'
+        let calculatedAiPortions = 102;
+        let manualPortions = 102;
+        let currentPortions = 102;
+
+        const shiftConfig = {
+            'Breakfast': {
+                name: 'Breakfast Service',
+                basePortions: 80,
+                baseAttendance: 85,
+                histAvg: '77.7 Meals',
+                histPeak: '88 Meals',
+                histMin: '70 Meals',
+                menu: 'Idli, Sambar, Vegetable Upma, Masala Chai',
+                ingredients: (p) => [
+                    { name: 'Semolina & Idli Rice', note: 'Standard requirement: 100g per portion', qty: `${(p * 0.10).toFixed(1)} kg` },
+                    { name: 'Sambar Dal & Pulses', note: 'Standard requirement: 50g per portion', qty: `${(p * 0.05).toFixed(1)} kg` },
+                    { name: 'Breakfast Veggies & Potatoes', note: 'Onions, potatoes, carrots: 80g per portion', qty: `${(p * 0.08).toFixed(1)} kg` },
+                    { name: 'Cooking Oil & Pure Ghee', note: 'Ghee, oil & spices: 15ml per portion', qty: `${(p * 0.015).toFixed(1)} L` },
+                    { name: 'Bread & Flour Rations', note: '60g per portion', qty: `${(p * 0.06).toFixed(1)} kg` }
+                ]
+            },
+            'Lunch': {
+                name: 'Lunch Service',
+                basePortions: 102,
+                baseAttendance: 100,
+                histAvg: '93.3 Meals',
+                histPeak: '105 Meals',
+                histMin: '85 Meals',
+                menu: 'Steamed Rice, Dal Makhani, Mixed Veg Curry, Chapatis',
+                ingredients: (p) => [
+                    { name: 'Rice / Grains', note: 'Standard requirement: 150g per portion', qty: `${(p * 0.15).toFixed(1)} kg` },
+                    { name: 'Dal & Lentils', note: 'Standard requirement: 80g per portion', qty: `${(p * 0.08).toFixed(1)} kg` },
+                    { name: 'Fresh Vegetables', note: 'Mixed seasonal vegetables: 120g per portion', qty: `${(p * 0.12).toFixed(1)} kg` },
+                    { name: 'Cooking Oil & Condiments', note: 'Refined oil, ghee & spices: 25ml per portion', qty: `${(p * 0.025).toFixed(1)} L` },
+                    { name: 'Wheat Flour (Chapatis)', note: `${Math.round(p * 2)} chapatis (2 per portion)`, qty: `${(p * 0.10).toFixed(1)} kg` }
+                ]
+            },
+            'Snacks': {
+                name: 'Snacks Service',
+                basePortions: 55,
+                baseAttendance: 60,
+                histAvg: '63.3 Meals',
+                histPeak: '72 Meals',
+                histMin: '55 Meals',
+                menu: 'Vegetable Cutlets, Samosa, Grilled Sandwiches, Tea',
+                ingredients: (p) => [
+                    { name: 'Potatoes & Mixed Veggies', note: 'Cutlet & samosa filling: 120g per portion', qty: `${(p * 0.12).toFixed(1)} kg` },
+                    { name: 'Flour / Batter / Crust', note: 'All-purpose / gram flour: 80g per portion', qty: `${(p * 0.08).toFixed(1)} kg` },
+                    { name: 'Cooking Oil (Deep Frying)', note: 'Frying oil & butter: 35ml per portion', qty: `${(p * 0.035).toFixed(1)} L` },
+                    { name: 'Chutneys & Condiments', note: 'Mint & tamarind chutney: 25g per portion', qty: `${(p * 0.025).toFixed(1)} kg` },
+                    { name: 'Tea & Beverage Rations', note: 'Special cutting chai: 50ml per portion', qty: `${(p * 0.05).toFixed(1)} L` }
+                ]
+            },
+            'Dinner': {
+                name: 'Dinner Service',
+                basePortions: 95,
+                baseAttendance: 95,
+                histAvg: '87.7 Meals',
+                histPeak: '98 Meals',
+                histMin: '75 Meals',
+                menu: 'Jeera Rice, Paneer Butter Masala, Yellow Dal Tadka, Phulkas',
+                ingredients: (p) => [
+                    { name: 'Jeera Rice & Grains', note: 'Standard requirement: 140g per portion', qty: `${(p * 0.14).toFixed(1)} kg` },
+                    { name: 'Dal & Paneer Protein', note: 'Cottage cheese & lentils: 90g per portion', qty: `${(p * 0.09).toFixed(1)} kg` },
+                    { name: 'Fresh Vegetables & Gravy', note: 'Tomatoes, onions, veggies: 110g per portion', qty: `${(p * 0.11).toFixed(1)} kg` },
+                    { name: 'Cooking Oil & Pure Ghee', note: 'Pure ghee & refined oil: 25ml per portion', qty: `${(p * 0.025).toFixed(1)} L` },
+                    { name: 'Wheat Flour (Phulkas)', note: `${Math.round(p * 2)} phulkas (2 per portion)`, qty: `${(p * 0.10).toFixed(1)} kg` }
+                ]
+            }
+        };
+
+        const eventModifiers = {
+            'none': 1.00,
+            'holiday': 0.75,      // -25%
+            'exam': 1.15,         // +15%
+            'vacation': 0.60,     // -40%
+            'special': 1.30       // +30%
+        };
+
+        function normalizeShiftName(shift) {
+            if (!shift) return 'Lunch';
+            const s = shift.toLowerCase();
+            if (s.includes('break')) return 'Breakfast';
+            if (s.includes('snack')) return 'Snacks';
+            if (s.includes('din')) return 'Dinner';
+            return 'Lunch';
+        }
+
+        function setHistoryShift(shift) {
+            const normShift = normalizeShiftName(shift);
+            currentHistoryShift = normShift;
+            const allShiftNames = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+            allShiftNames.forEach(s => {
+                const btn = document.getElementById(`btnHistShift${s}`);
+                if (btn) btn.classList.toggle('active', s.toLowerCase() === normShift.toLowerCase());
+            });
+
+            // Dynamically calculate and prepare shift-wise demand & ingredients
+            calculateDemand(true);
+            FoodSafe.toast(`Switched to ${normShift} Shift! Food preparation & history updated.`, 'info');
+        }
+
+        function handleOverviewWeatherChange(weatherVal) {
+            FoodSafe.setTarget({ weather: weatherVal });
+            calculateDemand(true);
+            FoodSafe.toast(`Weather updated to ${weatherVal.toUpperCase()}. Demand forecast recalculated and synced.`, 'info');
+        }
+
+        function handleOverviewEventChange(eventVal) {
+            FoodSafe.setTarget({ event: eventVal });
+            calculateDemand(true);
+            FoodSafe.toast(`Calendar event set to ${eventVal.toUpperCase()}. Demand forecast recalculated and synced.`, 'info');
+        }
+
+        function setDemandSource(mode) {
+            demandSourceMode = mode;
+            const labelAi = document.getElementById('labelRadioAi');
+            const labelManual = document.getElementById('labelRadioManual');
+            const radioAi = document.getElementById('radioAi');
+            const radioManual = document.getElementById('radioManual');
+            const manualBox = document.getElementById('manualPortionBox');
+            const kpiBadge = document.getElementById('kpiModeBadge');
+            const sideAiBadge = document.querySelector('.side-ai-badge');
+
+            if (mode === 'manual') {
+                demandSourceMode = 'manual';
+                if (labelAi) labelAi.classList.remove('active');
+                if (labelManual) labelManual.classList.add('active');
+                if (radioManual) radioManual.checked = true;
+                if (manualBox) manualBox.style.display = 'block';
+                if (kpiBadge) {
+                    kpiBadge.textContent = 'Manual Input';
+                    kpiBadge.className = 'kpi-mode-badge badge-manual';
+                }
+                if (sideAiBadge) {
+                    sideAiBadge.textContent = 'Manual Override';
+                    sideAiBadge.style.background = 'rgba(234, 179, 8, 0.18)';
+                    sideAiBadge.style.color = '#ca8a04';
+                    sideAiBadge.style.borderColor = 'rgba(234, 179, 8, 0.4)';
+                }
+
+                const portInput = document.getElementById('manualPortionInput');
+                const persInput = document.getElementById('manualPersonsInput');
+                if (manualInputType === 'persons') {
+                    if (persInput) persInput.focus();
+                } else {
+                    if (portInput) portInput.focus();
+                }
+            } else {
+                if (labelAi) labelAi.classList.add('active');
+                if (labelManual) labelManual.classList.remove('active');
+                if (radioAi) radioAi.checked = true;
+                if (manualBox) manualBox.style.display = 'none';
+                if (kpiBadge) {
+                    kpiBadge.textContent = 'AI Recommended';
+                    kpiBadge.className = 'kpi-mode-badge badge-ai';
+                }
+                if (sideAiBadge) {
+                    sideAiBadge.textContent = 'Auto Applied';
+                    sideAiBadge.style.background = 'rgba(22, 163, 74, 0.15)';
+                    sideAiBadge.style.color = 'var(--success, #16a34a)';
+                    sideAiBadge.style.borderColor = 'rgba(22, 163, 74, 0.3)';
+                }
+
+                // Re-calculate and apply AI recommendation
+                calculateDemand(true);
+            }
+        }
+
+        function setManualInputType(type) {
+            manualInputType = type;
+            const btnPersons = document.getElementById('btnManualTypePersons');
+            const btnPortions = document.getElementById('btnManualTypePortions');
+            const wrapPersons = document.getElementById('wrapperPersonsInput');
+            const wrapPortions = document.getElementById('wrapperPortionsInput');
+            const hint = document.getElementById('manualPortionHint');
+            const btnText = document.getElementById('btnApplyManualText');
+            const persInput = document.getElementById('manualPersonsInput');
+            const portInput = document.getElementById('manualPortionInput');
+
+            if (type === 'persons') {
+                if (btnPersons) btnPersons.classList.add('active');
+                if (btnPortions) btnPortions.classList.remove('active');
+                if (wrapPersons) wrapPersons.style.display = 'block';
+                if (wrapPortions) wrapPortions.style.display = 'none';
+                if (hint) hint.innerHTML = '<span>Input headcount (number of persons) to calculate meal demand and raw ingredients.</span>';
+                if (btnText) btnText.textContent = 'Apply Persons Demand';
+                if (persInput) persInput.focus();
+            } else {
+                if (btnPersons) btnPersons.classList.remove('active');
+                if (btnPortions) btnPortions.classList.add('active');
+                if (wrapPersons) wrapPersons.style.display = 'none';
+                if (wrapPortions) wrapPortions.style.display = 'block';
+                if (hint) hint.innerHTML = '<span>Input exact portion quantity to calculate required cooking volume and raw ingredients.</span>';
+                if (btnText) btnText.textContent = 'Apply Portions Demand';
+                if (portInput) portInput.focus();
+            }
+        }
+
+        function applyManualPortions(showToast = true) {
+            const portInput = document.getElementById('manualPortionInput');
+            const persInput = document.getElementById('manualPersonsInput');
+            const shift = normalizeShiftName(currentHistoryShift);
+            const cfg = shiftConfig[shift] || shiftConfig['Lunch'];
+            
+            let portVal, persVal;
+
+            if (manualInputType === 'persons') {
+                persVal = persInput ? parseInt(persInput.value) : NaN;
+                if (isNaN(persVal) || persVal <= 0) {
+                    FoodSafe.toast('Please enter a valid number of persons (e.g. 100).', 'danger');
+                    if (persInput) persInput.focus();
+                    return;
+                }
+                persVal = Math.round(persVal);
+                portVal = persVal; // 1 portion per person
+                if (portInput) portInput.value = portVal;
+            } else {
+                portVal = portInput ? parseInt(portInput.value) : NaN;
+                if (isNaN(portVal) || portVal <= 0) {
+                    FoodSafe.toast('Please enter a valid portion quantity (e.g. 100).', 'danger');
+                    if (portInput) portInput.focus();
+                    return;
+                }
+                portVal = Math.round(portVal);
+                persVal = portVal; // 1 person per portion
+                if (persInput) persInput.value = persVal;
+            }
+
+            manualPortions = portVal;
+            currentPortions = portVal;
+
+            // Update portion badge and summary statistics
+            const portionEl = document.getElementById('portionCount');
+            if (portionEl) portionEl.textContent = portVal;
+
+            const statTarget = document.getElementById('statTargetVal');
+            if (statTarget) statTarget.textContent = `${portVal} Portions`;
+
+            // Update expected attendance headcount
+            const sideAtt = document.getElementById('sideAiAttendanceText');
+            if (sideAtt) sideAtt.textContent = `${persVal} people`;
+
+            const kpiSub = document.getElementById('kpiBannerSubtitle');
+            if (kpiSub) kpiSub.textContent = `Custom manager-defined portion volume for ${shift} Shift`;
+
+            // Dynamically recalculate raw ingredients for the active shift
+            updateIngredientBreakdown(portVal, shift);
+            updateTodayBarOnChart(portVal);
+
+            // Sync with session target
+            FoodSafe.setTarget({
+                portions: portVal,
+                persons: persVal,
+                attendance: persVal,
+                mealType: shift,
+                menu: cfg.menu,
+                source: 'manual',
+                manualType: manualInputType,
+                date: new Date().toISOString().slice(0, 10)
+            });
+
+            if (showToast) {
+                if (manualInputType === 'persons') {
+                    FoodSafe.toast(`Applied ${shift} demand for ${persVal} people (${portVal} portions)! Raw ingredients updated.`, 'success');
+                } else {
+                    FoodSafe.toast(`Applied ${portVal} manual portions for ${shift} Shift! Raw ingredients updated.`, 'success');
+                }
+            }
+        }
+
+        function updateIngredientBreakdown(portions, shiftName = currentHistoryShift) {
+            const shift = normalizeShiftName(shiftName);
+            const cfg = shiftConfig[shift] || shiftConfig['Lunch'];
+            const items = cfg.ingredients(portions);
+
+            const container = document.getElementById('sourcesQueueList');
+            if (container) {
+                container.innerHTML = items.map(item => `
+                    <div class="source-queue-row">
+                        <div class="source-info-col">
+                            <span class="source-name">${item.name}</span>
+                            <span class="source-subtext">${item.note}</span>
+                        </div>
+                        <div class="source-qty-col">
+                            <span class="source-qty">${item.qty}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function calculateDemand(saveToStore = true) {
+            const target = FoodSafe.getTarget();
+            const shift = normalizeShiftName(currentHistoryShift);
+            const cfg = shiftConfig[shift] || shiftConfig['Lunch'];
+
+            const weatherVal = (target.weather || document.getElementById('overviewWeatherSelect')?.value || 'sunny').toLowerCase();
+            const eventVal = (target.event || document.getElementById('eventAdjustment')?.value || 'none').toLowerCase();
+
+            let weatherMultiplier = 1.00;
+            if (weatherVal.includes('rain')) weatherMultiplier = 1.05;
+            else if (weatherVal.includes('snow')) weatherMultiplier = 1.10;
+
+            let eventMultiplier = 1.00;
+            if (eventVal.includes('holi')) eventMultiplier = 0.75;
+            else if (eventVal.includes('exam')) eventMultiplier = 1.15;
+            else if (eventVal.includes('vacat') || eventVal.includes('break')) eventMultiplier = 0.60;
+            else if (eventVal.includes('special')) eventMultiplier = 1.30;
+
+            const basePortions = cfg.basePortions;
+            const calculatedAi = Math.round(basePortions * weatherMultiplier * eventMultiplier);
+            calculatedAiPortions = calculatedAi;
+
+            if (demandSourceMode === 'ai') {
+                currentPortions = calculatedAi;
+            }
+
+            // Sync selectors in Side AI box
+            const wSelect = document.getElementById('overviewWeatherSelect');
+            if (wSelect) {
+                if (weatherVal.includes('rain')) wSelect.value = 'rainy';
+                else if (weatherVal.includes('snow')) wSelect.value = 'snowy';
+                else if (weatherVal.includes('cloud')) wSelect.value = 'cloudy';
+                else wSelect.value = 'sunny';
+            }
+
+            const eSelect = document.getElementById('eventAdjustment');
+            if (eSelect) {
+                if (eventVal.includes('holi')) eSelect.value = 'holiday';
+                else if (eventVal.includes('exam')) eSelect.value = 'exam';
+                else if (eventVal.includes('vacat') || eventVal.includes('break')) eSelect.value = 'vacation';
+                else if (eventVal.includes('special')) eSelect.value = 'special';
+                else eSelect.value = 'none';
+            }
+
+            // Update UI elements
+            const portionEl = document.getElementById('portionCount');
+            if (portionEl) portionEl.textContent = currentPortions;
+
+            const kpiTitle = document.getElementById('kpiBannerShiftTitle');
+            if (kpiTitle) kpiTitle.textContent = `Required Food Portions to Cook Today (${cfg.name})`;
+
+            const weatherLabel = weatherVal.includes('rain') ? 'Rainy (+5%)' : (weatherVal.includes('snow') ? 'Snowy (+10%)' : (weatherVal.includes('cloud') ? 'Cloudy' : 'Sunny'));
+            const eventLabel = eventVal.includes('holi') ? 'Holiday (-25%)' : (eventVal.includes('exam') ? 'Exam Period (+15%)' : (eventVal.includes('vacat') || eventVal.includes('break') ? 'Vacation (-40%)' : (eventVal.includes('special') ? 'Special Event (+30%)' : 'Regular Day')));
+
+            const kpiSub = document.getElementById('kpiBannerSubtitle');
+            if (kpiSub) {
+                if (demandSourceMode === 'ai') {
+                    kpiSub.textContent = `Estimated serving volume for ${shift} Shift under ${weatherLabel} weather & ${eventLabel}`;
+                } else {
+                    kpiSub.textContent = `Custom manager-defined portion volume for ${shift} Shift`;
+                }
+            }
+
+            const statTarget = document.getElementById('statTargetVal');
+            if (statTarget) statTarget.textContent = `${currentPortions} Portions`;
+
+            const sideWeather = document.getElementById('sideAiWeatherText');
+            if (sideWeather) sideWeather.textContent = `${weatherLabel}`;
+
+            const sideAtt = document.getElementById('sideAiAttendanceText');
+            if (sideAtt) sideAtt.textContent = `${cfg.baseAttendance} people`;
+
+            const sideBase = document.getElementById('sideAiBaselineDemand');
+            if (sideBase) sideBase.textContent = `${calculatedAi} portions`;
+
+            // Update manual fields placeholders (allow manual entry without forced overwrite)
+            const portInput = document.getElementById('manualPortionInput');
+            const persInput = document.getElementById('manualPersonsInput');
+            if (portInput && !portInput.value) portInput.placeholder = `e.g. ${currentPortions}`;
+            if (persInput && !persInput.value) persInput.placeholder = `e.g. ${cfg.baseAttendance}`;
+
+            // Render Shift Ingredients
+            updateIngredientBreakdown(currentPortions, shift);
+
+            // Update Chart & Historical Table
+            loadHistoricalConsumption();
+
+            if (saveToStore) {
+                FoodSafe.setTarget({
+                    mealType: shift,
+                    portions: currentPortions,
+                    projectedDemand: currentPortions,
+                    attendance: cfg.baseAttendance,
+                    menu: cfg.menu,
+                    weather: weatherVal,
+                    event: eventVal,
+                    source: demandSourceMode,
+                    date: new Date().toISOString().slice(0, 10)
+                });
+            }
+        }
+
+        function saveAsTodayTarget() {
+            FoodSafe.setTarget({
+                portions: currentPortions,
+                mealType: currentHistoryShift,
+                source: demandSourceMode,
+                date: new Date().toISOString().slice(0, 10)
+            });
+            FoodSafe.toast(`Target set to ${currentPortions} portions for ${currentHistoryShift} (${demandSourceMode.toUpperCase()})! Synchronized across all kitchen modules.`, 'success');
+        }
+
+        function updateTodayBarOnChart(portions) {
+            currentPortions = portions;
+            const statTarget = document.getElementById('statTargetVal');
+            if (statTarget) statTarget.textContent = `${portions} Portions`;
+            loadHistoricalConsumption();
+        }
+
+        // View Switching between Overview & Settings
+        function switchMainView(viewId, btnElement) {
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.side-panel-nav .nav-btn').forEach(b => b.classList.remove('active'));
+
+            const targetView = document.getElementById(viewId);
+            if (targetView) targetView.classList.add('active');
+            if (btnElement) btnElement.classList.add('active');
+
+            closeAllDropdowns();
+        }
+
+        function populateSettingsFields() {
+            const session = FoodSafe.getSession() || {};
+            const settings = FoodSafe.getKitchenSettings() || {};
+            
+            const mgrEl = document.getElementById('settingManagerName');
+            if (mgrEl) mgrEl.value = settings.managerName || session.fullName || '';
+
+            const kitEl = document.getElementById('settingKitchenName');
+            if (kitEl) kitEl.value = settings.kitchenName || session.kitchenName || '';
+
+            const fssaiEl = document.getElementById('settingFssaiId');
+            if (fssaiEl) fssaiEl.value = session.fssaiNumber || '';
+
+            const passEl = document.getElementById('settingNewPassword');
+            if (passEl) passEl.value = '';
+
+            const mealSizeEl = document.getElementById('settingMealSize');
+            if (mealSizeEl) mealSizeEl.value = settings.defaultMealSizeGrams || 350;
+
+            const kitchenStateEl = document.getElementById('kitchenStateSelect');
+            if (kitchenStateEl) kitchenStateEl.value = settings.kitchenStatus || 'open';
+
+            const mode = settings.dailySummaryMode || 'auto';
+            const autoBtn = document.getElementById('summaryModeAutoBtn');
+            const manBtn = document.getElementById('summaryModeManualBtn');
+            if (autoBtn && manBtn) {
+                if (mode === 'auto') {
+                    autoBtn.classList.add('active');
+                    manBtn.classList.remove('active');
+                } else {
+                    manBtn.classList.add('active');
+                    autoBtn.classList.remove('active');
+                }
+            }
+        }
+
+        function openSettingsView() {
+            populateSettingsFields();
+            switchMainView('settingsView', document.getElementById('navSettingsBtn'));
+        }
+
+        async function handleSaveSettings(e) {
+            if (e) e.preventDefault();
+
+            const managerName = document.getElementById('settingManagerName')?.value?.trim();
+            const kitchenName = document.getElementById('settingKitchenName')?.value?.trim();
+            const newPassword = document.getElementById('settingNewPassword')?.value?.trim();
+            const mealSize = parseFloat(document.getElementById('settingMealSize')?.value) || 350;
+            const kitchenStatus = document.getElementById('kitchenStateSelect')?.value || 'open';
+
+            // 1. Update kitchen settings
+            const currentSettings = FoodSafe.getKitchenSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                managerName: managerName || currentSettings.managerName,
+                kitchenName: kitchenName || currentSettings.kitchenName,
+                defaultMealSizeGrams: mealSize,
+                kitchenStatus: kitchenStatus
+            };
+
+            if (FoodSafe.saveKitchenSettingsAsync) {
+                await FoodSafe.saveKitchenSettingsAsync(updatedSettings);
+            } else {
+                FoodSafe.saveKitchenSettings(updatedSettings);
+            }
+
+            // Update session profile if manager or kitchen name was changed
+            const session = FoodSafe.getSession();
+            if (session) {
+                if (managerName) session.fullName = managerName;
+                if (kitchenName) session.kitchenName = kitchenName;
+                FoodSafe.saveSession(session);
+            }
+
+            // 2. Handle Change Password
+            let passwordUpdated = false;
+            if (newPassword) {
+                if (newPassword.length < 6) {
+                    FoodSafe.toast('Password must be at least 6 characters long.', 'danger');
+                    return;
+                }
+
+                const submitBtn = e.target ? e.target.querySelector('button[type="submit"]') : null;
+                const originalBtnText = submitBtn ? submitBtn.textContent : '';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Updating Password...';
+                }
+
+                try {
+                    if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+                        const { data, error } = await supabaseClient.auth.updateUser({
+                            password: newPassword
+                        });
+
+                        if (error) {
+                            console.warn('Supabase password update notice:', error);
+                            FoodSafe.toast(`Password update notice: ${error.message}`, 'warning');
+                        } else {
+                            passwordUpdated = true;
+                        }
+                    } else {
+                        passwordUpdated = true;
+                    }
+
+                    if (document.getElementById('settingNewPassword')) {
+                        document.getElementById('settingNewPassword').value = '';
+                    }
+                } catch (err) {
+                    console.error('Password change error:', err);
+                    FoodSafe.toast('An error occurred while updating password.', 'danger');
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalBtnText;
+                    }
+                }
+            }
+
+            if (passwordUpdated) {
+                FoodSafe.toast('Settings & Password updated successfully in Supabase!', 'success');
+            } else {
+                FoodSafe.toast('Settings & Preferences saved successfully!', 'success');
+            }
+        }
+
+        function setDailySummaryMode(mode) {
+            const settings = FoodSafe.getKitchenSettings();
+            settings.dailySummaryMode = mode;
+            FoodSafe.saveKitchenSettings(settings);
+            
+            const autoBtn = document.getElementById('summaryModeAutoBtn');
+            const manBtn = document.getElementById('summaryModeManualBtn');
+            if (autoBtn && manBtn) {
+                if (mode === 'auto') {
+                    autoBtn.classList.add('active');
+                    manBtn.classList.remove('active');
+                } else {
+                    manBtn.classList.add('active');
+                    autoBtn.classList.remove('active');
+                }
+            }
+            FoodSafe.toast(`Daily Summary mode set to ${mode === 'auto' ? 'Auto-Sync' : 'Manual Entry'}.`, 'info');
+        }
+
+        function updateKitchenStatus(status) {
+            const settings = FoodSafe.getKitchenSettings();
+            settings.kitchenStatus = status;
+            FoodSafe.saveKitchenSettings(settings);
+            FoodSafe.toast(`Kitchen status updated to ${status.toUpperCase()}.`, 'info');
+        }
+
+        let isPortionAutoSync = true;
+        function togglePortionWeightSyncMode() {
+            isPortionAutoSync = !isPortionAutoSync;
+            const badge = document.getElementById('portionSyncModeBadge');
+            const unitText = document.getElementById('portionSyncUnitText');
+            if (badge) {
+                badge.innerHTML = isPortionAutoSync ? '⚡ Auto-Sync' : '✎ Manual';
+            }
+            if (unitText) {
+                unitText.textContent = isPortionAutoSync ? 'g (Auto)' : 'g (Manual)';
+            }
+            FoodSafe.toast(`Portion weight calculation mode: ${isPortionAutoSync ? 'Auto-Sync' : 'Manual'}`, 'info');
+        }
+
+        function handleManualMealSizeInput() {
+            const val = parseFloat(document.getElementById('settingMealSize')?.value) || 350;
+            const settings = FoodSafe.getKitchenSettings();
+            settings.defaultMealSizeGrams = val;
+            FoodSafe.saveKitchenSettings(settings);
+        }
+
+        // Dropdown Handlers
+        function toggleDropdown(menuId) {
+            const menu = document.getElementById(menuId);
+            if (!menu) return;
+            const wasActive = menu.classList.contains('active');
+            closeAllDropdowns();
+            if (!wasActive) {
+                menu.classList.add('active');
+            }
+        }
+
+        function closeAllDropdowns() {
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active'));
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.top-bar-right')) {
+                closeAllDropdowns();
+            }
+        });
+
+        // Theme Toggle
+        function setAppTheme(theme) {
+            FoodSafe.setTheme(theme);
+        }
+
+        // Load and sync Historical Consumption & Chart (Shift-Aware)
+        function loadHistoricalConsumption() {
+            const allHistory = FoodSafe.getHistory();
+            const theadRow = document.getElementById('histTableHeadRow');
+            const tbody = document.getElementById('histTableBody');
+
+            if (!allHistory || allHistory.length === 0) {
+                if (theadRow) theadRow.innerHTML = '<th>Parameter</th><th colspan="3">Historical Shift Data</th>';
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align:center; padding:32px 20px; color:var(--text-muted);">
+                                <div style="font-weight:600; margin-bottom:6px; color:var(--text-main);">No Consumption History Found</div>
+                                <div style="font-size:0.85rem;">Complete and log your first shift summary to populate real-time trends and analysis.</div>
+                            </td>
+                        </tr>
+                    `;
+                }
+                const statAvg = document.getElementById('statHistAvg');
+                if (statAvg) statAvg.textContent = `—`;
+                const statPeak = document.getElementById('statHistPeak');
+                if (statPeak) statPeak.textContent = `—`;
+                const statMin = document.getElementById('statHistMin');
+                if (statMin) statMin.textContent = `—`;
+                const statAtt = document.getElementById('statHistAttendance');
+                if (statAtt) statAtt.textContent = `—`;
+                return;
+            }
+
+            // Filter history by current active shift (Lunch or Dinner)
+            const shiftHistory = allHistory.filter(e => (e.shift || 'Lunch').toLowerCase() === currentHistoryShift.toLowerCase());
+            const sourceList = shiftHistory.length > 0 ? shiftHistory : allHistory;
+            const recentEntries = (sourceList.length >= 3 ? sourceList.slice(0, 3) : sourceList).reverse();
+
+            // Update Transposed Table
+            if (theadRow && tbody && recentEntries.length > 0) {
+                theadRow.innerHTML = '<th>Parameter</th>' + recentEntries.map(e => `<th>${e.date} (${e.shift || currentHistoryShift})</th>`).join('');
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td>Shift Service</td>
+                        ${recentEntries.map(e => {
+                            const sh = e.shift || currentHistoryShift;
+                            let shClass = 'badge-shift-lunch';
+                            const lower = sh.toLowerCase();
+                            if (lower === 'breakfast') shClass = 'badge-shift-breakfast';
+                            else if (lower === 'snacks') shClass = 'badge-shift-snacks';
+                            else if (lower === 'dinner') shClass = 'badge-shift-dinner';
+                            return `<td><span class="${shClass}">${sh}</span></td>`;
+                        }).join('')}
+                    </tr>
+                    <tr>
+                        <td>Weather</td>
+                        ${recentEntries.map(e => {
+                            const w = e.weather || 'Sunny';
+                            const c = w.toLowerCase().includes('sun') ? 'badge-sunny' : (w.toLowerCase().includes('rain') ? 'badge-rainy' : 'badge-cloudy');
+                            return `<td><span class="badge ${c}">${w}</span></td>`;
+                        }).join('')}
+                    </tr>
+                    <tr>
+                        <td>Calendar Event</td>
+                        ${recentEntries.map(e => {
+                            const ev = e.event || 'None';
+                            const c = ev !== 'None' ? 'badge-event' : 'badge-none';
+                            return `<td><span class="badge ${c}">${ev}</span></td>`;
+                        }).join('')}
+                    </tr>
+                    <tr>
+                        <td>Expected Attendance</td>
+                        ${recentEntries.map(e => {
+                            let source = 'AI';
+                            if (e.attendanceSource) {
+                                source = e.attendanceSource.toLowerCase().includes('man') ? 'Manual' : 'AI';
+                            } else if (e.source) {
+                                source = e.source.toLowerCase().includes('man') ? 'Manual' : 'AI';
+                            } else if (e.isManual) {
+                                source = 'Manual';
+                            } else if (e.date === '2026-08-12') {
+                                source = 'Manual';
+                            }
+                            const badgeClass = source === 'Manual' ? 'att-source-manual' : 'att-source-ai';
+                            return `<td>${e.attendance} people <span class="att-source-tag ${badgeClass}">(${source})</span></td>`;
+                        }).join('')}
+                    </tr>
+                    <tr>
+                        <td>Actual Food Consumed</td>
+                        ${recentEntries.map(e => `<td><span class="badge-meals">${e.foodConsumed} meals</span></td>`).join('')}
+                    </tr>
+                `;
+            }
+
+            // Calculate Statistics for active shift
+            const consumedValues = recentEntries.map(e => parseFloat(e.foodConsumed) || 0);
+            const avgConsumed = (consumedValues.reduce((a, b) => a + b, 0) / consumedValues.length).toFixed(1);
+            const peakConsumed = Math.max(...consumedValues);
+            const minConsumed = Math.min(...consumedValues);
+            const latestAttendance = recentEntries[recentEntries.length - 1].attendance || 100;
+
+            const statAvg = document.getElementById('statHistAvg');
+            if (statAvg) statAvg.textContent = `${avgConsumed} Meals`;
+            const statPeak = document.getElementById('statHistPeak');
+            if (statPeak) statPeak.textContent = `${peakConsumed} Meals`;
+            const statMin = document.getElementById('statHistMin');
+            if (statMin) statMin.textContent = `${minConsumed} Meals`;
+            const statAtt = document.getElementById('statHistAttendance');
+            if (statAtt) statAtt.textContent = `${latestAttendance} People`;
+
+            const sideAvg = document.getElementById('sideAiAvgText');
+            if (sideAvg) sideAvg.textContent = `${avgConsumed} meals (${currentHistoryShift})`;
+            const sideAtt = document.getElementById('sideAiAttendanceText');
+            if (sideAtt) sideAtt.textContent = `${latestAttendance} people`;
+
+            // Dynamic Proportional Chart Scaling with Safe Top Headroom & Margins
+            const maxDataVal = Math.max(...consumedValues, currentPortions || 0, 100);
+            const chartMax = Math.max(120, Math.ceil((maxDataVal * 1.3) / 20) * 20);
+            const baselineY = 225;
+            const usableHeight = 160; // Leaves >= 65px safe top margin from SVG boundary
+
+            // Update Dynamic Gridlines and Y-axis Scale Labels
+            const gridContainer = document.getElementById('chartGridlines');
+            const yLabelsContainer = document.getElementById('chartYLabels');
+            if (gridContainer && yLabelsContainer) {
+                let gridHtml = `<line x1="55" y1="${baselineY}" x2="570" y2="${baselineY}" stroke="#94a3b8" stroke-width="1.5" />`;
+                let yLabelsHtml = `<text x="45" y="${baselineY + 4}" text-anchor="end" font-size="11" fill="#64748b" font-weight="500">0</text>`;
+
+                const stepVal = chartMax / 4;
+                for (let i = 1; i <= 4; i++) {
+                    const v = Math.round(stepVal * i);
+                    const y = Math.round(baselineY - (i / 4) * usableHeight);
+                    gridHtml += `<line x1="55" y1="${y}" x2="570" y2="${y}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />`;
+                    yLabelsHtml += `<text x="45" y="${y + 4}" text-anchor="end" font-size="11" fill="#64748b" font-weight="500">${v}</text>`;
+                }
+                gridContainer.innerHTML = gridHtml;
+                yLabelsContainer.innerHTML = yLabelsHtml;
+            }
+
+            // Update Average Line & Dedicated Badge on Chart
+            const avgY = Math.round(baselineY - (parseFloat(avgConsumed) / chartMax) * usableHeight);
+            const avgLine = document.getElementById('avgLine');
+            if (avgLine) {
+                avgLine.setAttribute('y1', avgY);
+                avgLine.setAttribute('y2', avgY);
+            }
+            const avgBadgeBg = document.getElementById('avgBadgeBg');
+            const avgLineText = document.getElementById('avgLineText');
+            if (avgLineText) {
+                const textContent = `${currentHistoryShift} Avg (${avgConsumed})`;
+                avgLineText.textContent = textContent;
+                
+                // Keep badge within safe vertical bounds and aligned cleanly on the right
+                const badgeY = Math.max(25, Math.min(205, avgY - 11));
+                if (avgBadgeBg) {
+                    avgBadgeBg.setAttribute('y', badgeY);
+                }
+                avgLineText.setAttribute('y', badgeY + 15);
+            }
+            const legendAvg = document.getElementById('chartLegendAvgText');
+            if (legendAvg) {
+                legendAvg.textContent = `${currentHistoryShift} Historical Avg Line (${avgConsumed} Meals)`;
+            }
+
+            // Update SVG Bars proportionally with safe top margin and non-overlapping x positions
+            const xCoords = [75, 170, 265];
+            const barWidth = 48;
+            const barsContainer = document.getElementById('historicalChartBars');
+            if (barsContainer && recentEntries.length > 0) {
+                let barsHtml = '';
+                recentEntries.forEach((entry, i) => {
+                    const x = xCoords[i] || (75 + i * 95);
+                    const val = parseFloat(entry.foodConsumed) || 0;
+                    const h = Math.max(4, Math.round((val / chartMax) * usableHeight));
+                    const y = baselineY - h;
+                    const dateParts = (entry.date || '').split('-');
+                    const label = dateParts.length >= 3 ? `${dateParts[1]}/${dateParts[2]}` : (entry.label || 'Date');
+                    const itemShift = entry.shift || currentHistoryShift;
+
+                    barsHtml += `
+                        <rect class="chart-bar" data-val="${val}" data-label="${label}" data-shift="${itemShift} Shift" x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="4" fill="#187F87" />
+                        <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text-main)" style="paint-order: stroke fill; stroke: var(--bg-card, #ffffff); stroke-width: 3px; stroke-linejoin: round;">${val}</text>
+                        <text x="${x + barWidth / 2}" y="248" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text-main)">${label}</text>
+                        <text x="${x + barWidth / 2}" y="264" text-anchor="middle" font-size="10" fill="#64748b">${itemShift}</text>
+                    `;
+                });
+
+                // Add 4th bar: Today Prediction (Placed comfortably at x=360, leaving x=415..570 open for avg badge)
+                const targetVal = currentPortions;
+                const todayH = Math.max(4, Math.round((targetVal / chartMax) * usableHeight));
+                const todayY = baselineY - todayH;
+                const todayX = 360;
+                barsHtml += `
+                    <rect id="barToday" class="chart-bar" data-val="${targetVal}" data-label="Today (Target)" data-shift="Planned Target" x="${todayX}" y="${todayY}" width="${barWidth}" height="${todayH}" rx="4" fill="#105e64" />
+                    <text id="textTodayVal" x="${todayX + barWidth / 2}" y="${todayY - 8}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--primary-dark)" style="paint-order: stroke fill; stroke: var(--bg-card, #ffffff); stroke-width: 3px; stroke-linejoin: round;">${targetVal}</text>
+                    <text x="${todayX + barWidth / 2}" y="248" text-anchor="middle" font-size="12" font-weight="700" fill="var(--primary-dark)">Today (Pred.)</text>
+                    <text x="${todayX + barWidth / 2}" y="264" text-anchor="middle" font-size="10" fill="var(--primary-dark)">Target</text>
+                `;
+
+                barsContainer.innerHTML = barsHtml;
+                attachChartTooltips();
+            }
+        }
+
+        function attachChartTooltips() {
+            const tooltip = document.getElementById('chartTooltip');
+            if (!tooltip) return;
+            const bars = document.querySelectorAll('#historicalChartBars rect.chart-bar');
+            bars.forEach(bar => {
+                bar.addEventListener('mouseenter', (e) => {
+                    const val = bar.getAttribute('data-val') || '0';
+                    const label = bar.getAttribute('data-label') || 'Date';
+                    const shift = bar.getAttribute('data-shift') || '';
+                    tooltip.innerHTML = `<strong>${label}</strong><br/>${val} Meals (${shift})`;
+                    tooltip.style.left = `${e.clientX}px`;
+                    tooltip.style.top = `${e.clientY}px`;
+                    tooltip.style.display = 'block';
+                });
+                bar.addEventListener('mousemove', (e) => {
+                    tooltip.style.left = `${e.clientX}px`;
+                    tooltip.style.top = `${e.clientY}px`;
+                });
+                bar.addEventListener('mouseleave', () => {
+                    tooltip.style.display = 'none';
+                });
+            });
+        }
+
+        // Notification List Renderer
+        function renderNotifications() {
+            const container = document.getElementById('notifListContainer');
+            const badge = document.getElementById('notifBadgeCount');
+            if (!container) return;
+
+            const notifs = FoodSafe.getNotifications();
+            const unreadCount = FoodSafe.getUnreadNotificationCount();
+
+            if (badge) {
+                badge.textContent = unreadCount;
+                badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+            }
+
+            if (notifs.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">
+                        No new notifications.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifs.map(n => `
+                <button type="button" class="dropdown-item" onclick="handleNotificationClick('${n.id}')" style="opacity: ${n.read ? '0.6' : '1.0'};">
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.84rem; color: var(--text-main);">${n.title}</div>
+                        <div style="font-size: 0.74rem; color: var(--text-muted);">${n.detail}</div>
+                    </div>
+                </button>
+            `).join('');
+        }
+
+        function handleNotificationClick(id) {
+            const notifs = FoodSafe.getNotifications().map(n => n.id === id ? { ...n, read: true } : n);
+            FoodSafe.saveNotifications(notifs);
+            renderNotifications();
+        }
+
+        function clearAllNotifications() {
+            FoodSafe.clearAllNotifications();
+            renderNotifications();
+            FoodSafe.toast('All notifications cleared.', 'info');
+        }
+
+        // Kitchen status toggle
+        function toggleKitchenStatus() {
+            FoodSafe.toggleKitchenStatus();
+            const settings = FoodSafe.getKitchenSettings();
+            updateKitchenStatus(settings.status);
+        }
+
+        function updateKitchenStatus(status) {
+            const badge = document.getElementById('headerKitchenStatusBadge');
+            const text = document.getElementById('headerKitchenStatusText');
+            const select = document.getElementById('kitchenStateSelect');
+
+            if (status === 'closed') {
+                if (badge) badge.className = 'status-badge status-closed';
+                if (text) text.textContent = 'Kitchen Status: Closed';
+                if (select) select.value = 'closed';
+            } else {
+                if (badge) badge.className = 'status-badge status-open';
+                if (text) text.textContent = 'Kitchen Status: Open';
+                if (select) select.value = 'open';
+            }
+        }
+
+        function setDailySummaryMode(mode) {
+            FoodSafe.saveKitchenSettings({ dailySummaryMode: mode });
+            const btnAuto = document.getElementById('summaryModeAutoBtn');
+            const btnManual = document.getElementById('summaryModeManualBtn');
+            if (btnAuto) btnAuto.classList.toggle('active', mode === 'auto');
+            if (btnManual) btnManual.classList.toggle('active', mode === 'manual');
+            FoodSafe.toast(`Daily Summary mode set to ${mode === 'auto' ? 'Automatic Shift Sync' : 'Manual Entry'}.`, 'info');
+        }
+
+        function togglePortionWeightSyncMode() {
+            const settings = FoodSafe.getKitchenSettings();
+            const currentMode = settings.portionWeightMode || 'auto';
+            const newMode = currentMode === 'auto' ? 'manual' : 'auto';
+            setPortionWeightMode(newMode, true);
+        }
+
+        function setPortionWeightMode(mode, showToast = false) {
+            const badge = document.getElementById('portionSyncModeBadge');
+            const unit = document.getElementById('portionSyncUnitText');
+            const input = document.getElementById('settingMealSize');
+
+            if (mode === 'auto') {
+                if (badge) {
+                    badge.innerHTML = '⚡ Auto-Sync';
+                    badge.style.color = 'var(--primary, #187F87)';
+                    badge.style.background = 'rgba(24, 127, 135, 0.12)';
+                }
+                if (unit) unit.textContent = 'g (Auto)';
+
+                // Institutional standard 350g per person/portion
+                const syncedWeight = 350;
+                if (input) {
+                    input.value = syncedWeight;
+                }
+                FoodSafe.saveKitchenSettings({
+                    portionWeightMode: 'auto',
+                    defaultMealSizeGrams: syncedWeight
+                });
+                if (showToast) {
+                    FoodSafe.toast('Standard portion weight auto-synced with Meal Overview (350g per person).', 'success');
+                }
+            } else {
+                if (badge) {
+                    badge.innerHTML = '✏️ Manual';
+                    badge.style.color = 'var(--text-muted, #64748b)';
+                    badge.style.background = 'rgba(100, 116, 139, 0.12)';
+                }
+                if (unit) unit.textContent = 'grams';
+                FoodSafe.saveKitchenSettings({ portionWeightMode: 'manual' });
+                if (showToast) {
+                    FoodSafe.toast('Portion weight mode set to Manual entry.', 'info');
+                }
+            }
+        }
+
+        function handleManualMealSizeInput() {
+            const badge = document.getElementById('portionSyncModeBadge');
+            const unit = document.getElementById('portionSyncUnitText');
+            if (badge) {
+                badge.innerHTML = '✏️ Manual';
+                badge.style.color = 'var(--text-muted, #64748b)';
+                badge.style.background = 'rgba(100, 116, 139, 0.12)';
+            }
+            if (unit) unit.textContent = 'grams';
+            FoodSafe.saveKitchenSettings({ portionWeightMode: 'manual' });
+        }
+
+        function handleSaveSettings(e) {
+            e.preventDefault();
+            const managerName = document.getElementById('settingManagerName').value.trim();
+            const kitchenName = document.getElementById('settingKitchenName').value.trim();
+            const mealSize = parseInt(document.getElementById('settingMealSize').value) || 350;
+            const currentSettings = FoodSafe.getKitchenSettings();
+            const portionMode = currentSettings.portionWeightMode || 'auto';
+
+            FoodSafe.setSession({
+                name: managerName,
+                kitchenName: kitchenName
+            });
+
+            if (FoodSafe.saveKitchenSettingsAsync) {
+                FoodSafe.saveKitchenSettingsAsync({
+                    managerName: managerName,
+                    kitchenName: kitchenName,
+                    defaultMealSizeGrams: mealSize,
+                    portionWeightMode: portionMode
+                });
+            } else {
+                FoodSafe.saveKitchenSettings({
+                    managerName: managerName,
+                    kitchenName: kitchenName,
+                    defaultMealSizeGrams: mealSize,
+                    portionWeightMode: portionMode
+                });
+            }
+
+            syncSessionHeader();
+            FoodSafe.toast('System preferences saved successfully to database!', 'success');
+        }
+
+        function syncSessionHeader() {
+            const session = FoodSafe.getSession();
+            const settings = FoodSafe.getKitchenSettings();
+
+            const avatarEl = document.getElementById('headerUserAvatar');
+            const nameEl = document.getElementById('headerUserName');
+            const dropName = document.getElementById('dropdownUserName');
+            const dropRole = document.getElementById('dropdownUserRole');
+            const fssaiInput = document.getElementById('settingFssaiId');
+            const managerInput = document.getElementById('settingManagerName');
+            const kitchenInput = document.getElementById('settingKitchenName');
+
+            const name = session.name || settings.managerName || 'Kitchen Manager';
+            if (nameEl) nameEl.textContent = name;
+            if (dropName) dropName.textContent = name;
+            if (typeof FoodSafeAvatars !== 'undefined') {
+                FoodSafeAvatars.syncAllAvatars();
+            } else if (avatarEl) {
+                avatarEl.textContent = name.replace(/Chef\s*/i, '').charAt(0).toUpperCase() || 'M';
+            }
+            if (dropRole) dropRole.textContent = session.role || 'Kitchen Manager';
+            if (managerInput) managerInput.value = name;
+            if (kitchenInput) kitchenInput.value = session.kitchenName || settings.kitchenName || 'Commercial Kitchen Facility';
+            if (fssaiInput) fssaiInput.value = session.fssaiNumber || '';
+
+            const summaryMode = settings.dailySummaryMode || 'auto';
+            const btnAuto = document.getElementById('summaryModeAutoBtn');
+            const btnManual = document.getElementById('summaryModeManualBtn');
+            if (btnAuto) btnAuto.classList.toggle('active', summaryMode === 'auto');
+            if (btnManual) btnManual.classList.toggle('active', summaryMode === 'manual');
+
+            const portionMode = settings.portionWeightMode || 'auto';
+            setPortionWeightMode(portionMode, false);
+            if (portionMode === 'manual' && settings.defaultMealSizeGrams) {
+                const mealSizeInput = document.getElementById('settingMealSize');
+                if (mealSizeInput) mealSizeInput.value = settings.defaultMealSizeGrams;
+            }
+
+            updateKitchenStatus(settings.status || 'open');
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to end your kitchen management session?')) {
+                FoodSafe.logout();
+                FoodSafe.toast('Logged out successfully.', 'info');
+                setTimeout(() => {
+                    window.location.href = '../login/login.html';
+                }, 400);
+            }
+        }
+
+        function handleSwitchKitchen() {
+            FoodSafe.toast('Opening Kitchen Onboarding Portal...', 'info');
+            setTimeout(() => {
+                window.location.href = '../login/new register.html';
+            }, 300);
+        }
+
+        function exportOverviewReport() {
+            const history = FoodSafe.getHistory();
+            const target = FoodSafe.getTarget();
+            const headers = ['Report Section', 'Parameter / Date', 'Attendance', 'Food Consumed (Meals)', 'Waste (Meals)', 'Status / Weather'];
+            const rows = [
+                ['Active Target', `Target Date: ${target.date || 'Today'}`, target.attendance || 100, target.portions, 0, target.weather || 'Sunny'],
+                ...history.map(h => ['Historical Log', h.date, h.attendance, h.foodConsumed, h.waste, h.weather || 'Normal'])
+            ];
+            FoodSafe.exportToCSV('Foodagement_Meal_Overview_Report', headers, rows);
+        }
+
+        // Video Player Handlers & Theater Mode
+        function toggleVideoPlayback() {
+            const video = document.getElementById('localVideoPlayer');
+            const btn = document.getElementById('videoPlayPauseBtn');
+            if (!video) return;
+            if (video.paused) {
+                video.play();
+                if (btn) btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg><span class="btn-text">Pause</span>`;
+            } else {
+                video.pause();
+                if (btn) btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span class="btn-text">Play</span>`;
+            }
+        }
+
+        function toggleVideoAudio() {
+            const video = document.getElementById('localVideoPlayer');
+            const btn = document.getElementById('videoMuteBtn');
+            if (!video) return;
+            if (video.muted) {
+                video.muted = false;
+                if (btn) btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg><span class="btn-text">Mute</span>`;
+            } else {
+                video.muted = true;
+                if (btn) btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg><span class="btn-text">Unmute</span>`;
+            }
+        }
+
+        function toggleTheaterMode() {
+            const banner = document.getElementById('theaterVideoBanner');
+            const btn = document.getElementById('videoTheaterToggleBtn');
+            if (!banner) return;
+            banner.classList.toggle('theater-mode');
+            const isTheater = banner.classList.contains('theater-mode');
+            if (btn) {
+                btn.classList.toggle('active', isTheater);
+                const textEl = btn.querySelector('.btn-text');
+                if (textEl) textEl.textContent = isTheater ? 'Theater Mode' : 'Expand Theater';
+            }
+        }
+
+        function toggleVideoFullscreen() {
+            const banner = document.getElementById('theaterVideoBanner') || document.getElementById('localVideoPlayer');
+            if (!banner) return;
+            if (!document.fullscreenElement) {
+                if (banner.requestFullscreen) banner.requestFullscreen();
+                else if (banner.webkitRequestFullscreen) banner.webkitRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        function renderLiveDisasterAlert() {
+            if (typeof FoodSafe === 'undefined' || !FoodSafe.getDisasterAlertForPincode) return;
+            const session = FoodSafe.getSession() || {};
+            const disaster = FoodSafe.getDisasterAlertForPincode(session.pincode, session.location || session.address);
+
+            const titleTextEl = document.getElementById('disasterAlertTitleText');
+            const badgeEl = document.getElementById('disasterAlertBadge');
+            const typeHeadingEl = document.getElementById('disasterTypeHeading');
+            const incidentBodyEl = document.getElementById('disasterIncidentBody');
+            const postalDetailsEl = document.getElementById('disasterPostalDetails');
+            const reliefDriveTagEl = document.getElementById('reliefDriveTag');
+
+            if (titleTextEl) titleTextEl.textContent = `Disaster Alert: ${disaster.state}`;
+            if (badgeEl) {
+                badgeEl.textContent = disaster.distanceBadge;
+                badgeEl.style.backgroundColor = disaster.severityColor;
+            }
+            if (typeHeadingEl) typeHeadingEl.textContent = disaster.disasterType;
+            if (incidentBodyEl) incidentBodyEl.textContent = disaster.incidentDescription;
+            if (postalDetailsEl) {
+                postalDetailsEl.innerHTML = `📍 Pincode: <strong>${disaster.pincode}</strong> (${disaster.region}) • ${disaster.coordinatingAgency}`;
+            }
+            if (reliefDriveTagEl) {
+                reliefDriveTagEl.textContent = `${disaster.state} Relief Hub`;
+            }
+        }
+
+        function triggerDonationModal() {
+            const session = FoodSafe.getSession() || {};
+            const disaster = FoodSafe.getDisasterAlertForPincode ? FoodSafe.getDisasterAlertForPincode(session.pincode, session.location || session.address) : null;
+            if (!disaster) {
+                FoodSafe.toast("Real-Time Disaster Relief Hub connect active.", "info");
+                return;
+            }
+
+            let existingModal = document.getElementById('disasterReliefModal');
+            if (existingModal) existingModal.remove();
+
+            const modalOverlay = document.createElement('div');
+            modalOverlay.id = 'disasterReliefModal';
+            modalOverlay.style.position = 'fixed';
+            modalOverlay.style.top = '0';
+            modalOverlay.style.left = '0';
+            modalOverlay.style.width = '100vw';
+            modalOverlay.style.height = '100vh';
+            modalOverlay.style.background = 'rgba(15, 23, 42, 0.75)';
+            modalOverlay.style.backdropFilter = 'blur(6px)';
+            modalOverlay.style.display = 'flex';
+            modalOverlay.style.alignItems = 'center';
+            modalOverlay.style.justifyContent = 'center';
+            modalOverlay.style.zIndex = '99999';
+            modalOverlay.style.padding = '16px';
+
+            const ngosHtml = disaster.verifiedNgos.map(n => `
+                <div style="background: var(--bg-surface-soft, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-main, #0f172a);">${n.name}</div>
+                        <div style="font-size: 0.76rem; color: var(--text-muted, #64748b);">📍 Proximity: ${n.distance} • Contact: ${n.contact}</div>
+                    </div>
+                    <button onclick="navigator.clipboard.writeText('${n.upi}'); FoodSafe.toast('Copied UPI ID: ${n.upi}', 'success');" style="background: var(--primary, #16a34a); color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.76rem; cursor: pointer; font-weight: 600;">
+                        Copy UPI (${n.upi})
+                    </button>
+                </div>
+            `).join('');
+
+            const campsHtml = disaster.reliefCamps.map(c => `
+                <div style="background: var(--bg-surface-soft, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-main, #0f172a);">${c.name}</div>
+                        <div style="font-size: 0.76rem; color: var(--text-muted, #64748b);">${c.address} • Shelter Capacity: ${c.capacity}</div>
+                    </div>
+                    <span class="badge badge-warning" style="font-size: 0.74rem;">Needs ${c.neededPortions} meals</span>
+                </div>
+            `).join('');
+
+            modalOverlay.innerHTML = `
+                <div style="background: var(--bg-surface, #ffffff); width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; border-radius: 14px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid var(--border-color, #e2e8f0); padding: 24px; position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span class="badge" style="background: ${disaster.severityColor}; color: #fff; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px;">${disaster.severity}</span>
+                                <span style="font-size: 0.8rem; color: var(--text-muted, #64748b); font-weight: 600;">Pincode: ${disaster.pincode} (${disaster.state})</span>
+                                <span style="font-size: 0.76rem; color: #0284c7; font-weight: 500;">${disaster.distanceBadge}</span>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main, #0f172a); margin: 8px 0 3px 0;">${disaster.disasterType}</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-muted, #64748b); margin: 0;">Coordinated by: ${disaster.coordinatingAgency}</p>
+                        </div>
+                        <button onclick="document.getElementById('disasterReliefModal').remove()" style="background: none; border: none; font-size: 1.6rem; cursor: pointer; color: var(--text-muted, #64748b); line-height: 1; padding: 0 4px;">&times;</button>
+                    </div>
+
+                    <div style="background: rgba(220, 38, 38, 0.07); border-left: 4px solid ${disaster.severityColor}; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 0.82rem; color: var(--text-main, #0f172a); line-height: 1.45;">
+                        <strong>Live Incident Ground Situation:</strong> ${disaster.incidentDescription}
+                        <div style="margin-top: 6px; font-weight: 600; color: #b91c1c;">Urgent Provisions Needed: ${disaster.urgentlyNeeded}</div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="font-size: 0.92rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main, #0f172a);">Active Disaster Relief Shelters in Your Postal Sector:</h4>
+                        ${campsHtml}
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="font-size: 0.92rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main, #0f172a);">Verified Response Partners (Direct Dispatch / Instant UPI Donation):</h4>
+                        ${ngosHtml}
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap;">
+                        <button onclick="document.getElementById('disasterReliefModal').remove()" style="padding: 9px 16px; border: 1px solid var(--border-color, #e2e8f0); background: transparent; border-radius: 8px; font-size: 0.85rem; cursor: pointer; font-weight: 600; color: var(--text-main, #0f172a);">Close</button>
+                        <button onclick="FoodSafe.toast('✓ Surplus food dispatch pledged for ' + '${disaster.state}' + ' Relief Camp (' + '${disaster.pincode}' + ')!', 'success'); document.getElementById('disasterReliefModal').remove();" style="padding: 9px 18px; background: var(--primary, #16a34a); color: #fff; border: none; border-radius: 8px; font-size: 0.85rem; cursor: pointer; font-weight: 600;">
+                            🚀 Pledge Today's Surplus to This Camp
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modalOverlay);
+        }
+
+        // Live Header Date
+        function updateLiveDate() {
+            const dateEl = document.getElementById('headerLiveDate');
+            if (dateEl) {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = now.toLocaleDateString('en-US', options);
+            }
+        }
+
+        function syncActiveTargetFromStore() {
+            const targetData = FoodSafe.getTarget();
+            if (!targetData) return;
+
+            if (targetData.mealType) {
+                currentHistoryShift = normalizeShiftName(targetData.mealType);
+                const allShiftNames = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+                allShiftNames.forEach(s => {
+                    const btn = document.getElementById(`btnHistShift${s}`);
+                    if (btn) btn.classList.toggle('active', s.toLowerCase() === currentHistoryShift.toLowerCase());
+                });
+            }
+
+            if (targetData.source === 'manual') {
+                demandSourceMode = 'manual';
+                if (targetData.manualType) setManualInputType(targetData.manualType);
+                setDemandSource('manual');
+            } else {
+                demandSourceMode = 'ai';
+                setDemandSource('ai');
+            }
+
+            calculateDemand(false);
+        }
+
+        // Initialize on DOM load
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof FoodSafe !== 'undefined' && !FoodSafe.requireAuth('../login/login.html')) {
+                return;
+            }
+            FoodSafe.initTheme();
+            const savedTheme = FoodSafe.getTheme();
+            if (savedTheme === 'dark') {
+                const darkBtn = document.getElementById('themeDarkBtn');
+                const lightBtn = document.getElementById('themeLightBtn');
+                if (darkBtn) darkBtn.classList.add('active');
+                if (lightBtn) lightBtn.classList.remove('active');
+            }
+
+            syncActiveTargetFromStore();
+            updateLiveDate();
+            syncSessionHeader();
+            loadHistoricalConsumption();
+            renderNotifications();
+            renderLiveDisasterAlert();
+
+            // Asynchronously sync from Supabase database
+            if (FoodSafe.syncFromDatabase) {
+                FoodSafe.syncFromDatabase().then(() => {
+                    syncSessionHeader();
+                    loadHistoricalConsumption();
+                    syncActiveTargetFromStore();
+                    renderLiveDisasterAlert();
+                }).catch(() => {});
+            }
+
+            // Init Supabase Realtime Sync
+            if (FoodSafe.initRealtimeSubscriptions) {
+                FoodSafe.initRealtimeSubscriptions();
+            }
+
+            // Realtime Sync Listener
+            window.addEventListener('foodsafe-data-updated', () => {
+                syncSessionHeader();
+                loadHistoricalConsumption();
+                syncActiveTargetFromStore();
+                renderLiveDisasterAlert();
+                FoodSafe.toast("Real-time update received!", "info", 2000);
+            });
+
+            const hash = window.location.hash.replace('#', '');
+            if (hash === 'settingsView') {
+                openSettingsView();
+            }
+
+            // Real-time synchronization across pages and tabs
+            window.addEventListener('foodsafe-target-change', () => {
+                syncActiveTargetFromStore();
+            });
+            window.addEventListener('foodsafe-settings-change', () => {
+                syncSessionHeader();
+            });
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'foodsafe_forecast_target') syncActiveTargetFromStore();
+                if (e.key === 'foodsafe_kitchen_settings') syncSessionHeader();
+            });
+        });
+    </script>
+</body>
+</html>

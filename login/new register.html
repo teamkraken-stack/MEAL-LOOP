@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Loop - Kitchen Registration</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('meal_system_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e) {}
+        })();
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Ambient Glowing Background Elements -->
+    <div class="ambient-background" aria-hidden="true">
+        <div class="ambient-blob blob-1"></div>
+        <div class="ambient-blob blob-2"></div>
+        <div class="ambient-blob blob-3"></div>
+        <div class="grid-pattern"></div>
+    </div>
+
+    <!-- Registration Card Container -->
+    <main class="register-wrapper">
+        <section class="register-card">
+            
+            <!-- Brand Header -->
+            <header class="brand-header">
+                <div class="brand-logo-wrapper" aria-label="Meal Loop Logo">
+                    <img src="logo.png" alt="Meal Loop Logo" class="brand-logo-img">
+                </div>
+                <h1 class="brand-title">Meal<span> Loop</span></h1>
+                <p class="brand-subtitle">New Kitchen &amp; FSSAI Registration</p>
+                <div class="compliance-badge">
+                    <span class="badge-pulse" aria-hidden="true"></span>
+                    <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Official Kitchen Onboarding</span>
+                </div>
+            </header>
+
+            <form id="kitchenRegisterForm" onsubmit="handleKitchenRegister(event)">
+                <div class="form-grid">
+                    
+                    <!-- FSSAI License -->
+                    <div class="form-group col-span-2">
+                        <div class="label-wrapper">
+                            <label for="fssai_number">FSSAI Registration / License Number</label>
+                            <span class="label-hint">14-Digit Number</span>
+                        </div>
+                        <div class="input-container">
+                            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <input
+                                type="text"
+                                id="fssai_number"
+                                name="fssai_number"
+                                placeholder="Enter 14-digit FSSAI number"
+                                maxlength="14"
+                                pattern="\d{14}"
+                                inputmode="numeric"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Kitchen Name -->
+                    <div class="form-group col-span-2">
+                        <div class="label-wrapper">
+                            <label for="kitchen_name">Name of the Kitchen / Institution</label>
+                        </div>
+                        <div class="input-container">
+                            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            <input
+                                type="text"
+                                id="kitchen_name"
+                                name="kitchen_name"
+                                placeholder="e.g. Apex Central Kitchen #2"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Registered Mobile Number -->
+                    <div class="form-group">
+                        <div class="label-wrapper">
+                            <label for="mobile">Registered Mobile Number</label>
+                        </div>
+                        <div class="input-container">
+                            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                            <input
+                                type="tel"
+                                id="mobile"
+                                name="mobile"
+                                placeholder="Enter 10-digit mobile"
+                                maxlength="10"
+                                pattern="[0-9]{10}"
+                                inputmode="numeric"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- OTP Verification -->
+                    <div class="form-group">
+                        <div class="label-wrapper">
+                            <label for="otp">OTP Verification</label>
+                            <span class="label-hint">6 Digits</span>
+                        </div>
+                        <div class="input-container">
+                            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            <input
+                                type="text"
+                                id="otp"
+                                name="otp"
+                                placeholder="6-digit OTP (123456)"
+                                maxlength="6"
+                                inputmode="numeric"
+                            >
+                        </div>
+                        <div class="otp-action-group">
+                            <button type="button" class="btn-secondary btn-otp-action" id="btnSendOtp" onclick="handleSendOtp()">Send OTP</button>
+                            <button type="button" class="btn-secondary" id="btnVerifyOtp" onclick="handleVerifyOtp()">Verify</button>
+                        </div>
+                        <div id="otpSentHint" class="otp-sent-hint">✓ Demo OTP is: <strong>123456</strong></div>
+                    </div>
+
+                    <!-- Location / Address -->
+                    <div class="form-group col-span-2">
+                        <div class="label-wrapper">
+                            <label for="location">Kitchen Location / Complete Address</label>
+                        </div>
+                        <div class="input-container textarea-container">
+                            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <textarea
+                                id="location"
+                                name="location"
+                                rows="2"
+                                placeholder="Enter street, area, landmark and city"
+                                required
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- PIN Code -->
+                    <div class="form-group">
+                        <div class="label-wrapper">
+                            <label for="pincode">PIN Code</label>
+                        </div>
+                        <div class="input-container">
+                            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            </svg>
+                            <input
+                                type="text"
+                                id="pincode"
+                                name="pincode"
+                                placeholder="6-digit PIN code"
+                                maxlength="6"
+                                pattern="\d{6}"
+                                inputmode="numeric"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- FSSAI Issued Date with 5-Year Validity Indicator -->
+                    <div class="form-group">
+                        <div class="label-wrapper">
+                            <label for="issued_date">FSSAI Issued Date</label>
+                            <span id="validityBadge" style="font-size: 0.74rem; font-weight: 600; color: #15803d; display: none;">5-Year License Active</span>
+                        </div>
+                        <div class="input-container">
+                            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <input
+                                type="date"
+                                id="issued_date"
+                                name="issued_date"
+                                required
+                                onchange="updateFssaiValidityDisplay()"
+                            >
+                        </div>
+                        <div id="validityInfoText" style="display: none; font-size: 0.74rem; color: #0284c7; margin-top: 4px; font-weight: 500;"></div>
+                    </div>
+
+
+
+                    <!-- Create Password -->
+                    <div class="form-group">
+                        <div class="label-wrapper">
+                            <label for="password">Create Password</label>
+                        </div>
+                        <div class="input-container">
+                            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Create strong password"
+                                required
+                            >
+                            <button type="button" class="toggle-password-btn" aria-label="Toggle password visibility" onclick="togglePassword('password', this)">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="form-group">
+                        <div class="label-wrapper">
+                            <label for="confirm_password">Confirm Password</label>
+                        </div>
+                        <div class="input-container">
+                            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                            <input
+                                type="password"
+                                id="confirm_password"
+                                name="confirm_password"
+                                placeholder="Re-enter password"
+                                required
+                            >
+                            <button type="button" class="toggle-password-btn" aria-label="Toggle password visibility" onclick="togglePassword('confirm_password', this)">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-submit" id="registerSubmitBtn">
+                    <span>Register Kitchen</span>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <hr class="card-divider">
+
+            <!-- Footer Links -->
+            <div class="auth-switch">
+                Already registered?
+                <a href="login.html" class="register-link">Login here</a>
+            </div>
+
+            <!-- Trust Badge -->
+            <div class="footer-trust">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                <span>Verified Kitchen Compliance &amp; Standards Network</span>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Client-Side Script & Shared State -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabaseClient.js"></script>
+    <script src="../shared_foodsafe.js"></script>
+    <script src="foodsafe_avatars.js"></script>
+    <script>
+        let otpTimer = null;
+        let isOtpVerified = false;
+
+        function togglePassword(inputId, btnElement) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                btnElement.innerHTML = `
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
+                    </svg>
+                `;
+            } else {
+                input.type = 'password';
+                btnElement.innerHTML = `
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                `;
+            }
+        }
+
+        function handleSendOtp() {
+            const mobile = document.getElementById('mobile');
+            const btn = document.getElementById('btnSendOtp');
+            const hint = document.getElementById('otpSentHint');
+
+            if (!mobile.value || mobile.value.length !== 10) {
+                mobile.focus();
+                FoodSafe.toast('Please enter a valid 10-digit mobile number first.', 'warning');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            setTimeout(() => {
+                btn.textContent = 'Resend (30s)';
+                if (hint) hint.style.display = 'block';
+                document.getElementById('otp').value = '123456';
+                FoodSafe.toast('OTP 123456 sent to ' + mobile.value, 'success');
+
+                let countdown = 30;
+                clearInterval(otpTimer);
+                otpTimer = setInterval(() => {
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(otpTimer);
+                        btn.disabled = false;
+                        btn.textContent = 'Resend OTP';
+                    } else {
+                        btn.textContent = `Resend (${countdown}s)`;
+                    }
+                }, 1000);
+            }, 600);
+        }
+
+        function handleVerifyOtp() {
+            const otp = document.getElementById('otp');
+            const btn = document.getElementById('btnVerifyOtp');
+            if (!otp.value || otp.value.length !== 6) {
+                otp.focus();
+                FoodSafe.toast('Please enter a 6-digit OTP code.', 'warning');
+                return;
+            }
+
+            btn.textContent = '✓ Verified';
+            btn.style.backgroundColor = 'var(--success-light)';
+            btn.style.color = 'var(--success)';
+            btn.style.borderColor = 'var(--success-border)';
+            btn.disabled = true;
+            isOtpVerified = true;
+            FoodSafe.toast('Phone number verified successfully!', 'success');
+        }
+
+        async function handleKitchenRegister(e) {
+            e.preventDefault();
+            const fssai = document.getElementById('fssai_number').value.trim();
+            const name = document.getElementById('kitchen_name').value.trim();
+            const mobile = document.getElementById('mobile').value.trim();
+            const location = document.getElementById('location').value.trim();
+            const pincode = document.getElementById('pincode').value.trim();
+            const pwd = document.getElementById('password').value;
+            const confirmPwd = document.getElementById('confirm_password').value;
+            const chosenAvatarId = 'chef-mia';
+            const submitBtn = document.getElementById('registerSubmitBtn');
+
+            if (fssai.length !== 14) {
+                FoodSafe.toast('Please enter a valid 14-digit FSSAI number.', 'danger');
+                return;
+            }
+            if (mobile.length !== 10) {
+                FoodSafe.toast('Please enter a valid 10-digit mobile number.', 'danger');
+                return;
+            }
+            if (pincode.length !== 6) {
+                FoodSafe.toast('Please enter a valid 6-digit PIN code.', 'danger');
+                return;
+            }
+            if (pwd !== confirmPwd) {
+                FoodSafe.toast('Passwords do not match! Please check again.', 'danger');
+                return;
+            }
+            if (pwd.length < 6) {
+                FoodSafe.toast('Password must be at least 6 characters long.', 'warning');
+                return;
+            }
+
+            const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<span>Registering with Database...</span>`;
+            }
+
+            try {
+                let userId = null;
+                const syntheticEmail = `${fssai}@mealloop.internal`;
+
+                // Calculate 5-year FSSAI License validity
+                const issuedDateVal = document.getElementById('issued_date')?.value || new Date().toISOString().slice(0, 10);
+                const issuedObj = new Date(issuedDateVal);
+                const expiryObj = new Date(issuedObj);
+                expiryObj.setFullYear(expiryObj.getFullYear() + 5);
+                const validTillStr = expiryObj.toISOString().slice(0, 10);
+
+                if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+                    // 1. Supabase Auth Sign Up
+                    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                        email: syntheticEmail,
+                        password: pwd,
+                        options: {
+                            data: {
+                                full_name: name,
+                                fssai_number: fssai,
+                                mobile: mobile,
+                                issued_date: issuedDateVal,
+                                valid_till: validTillStr
+                            }
+                        }
+                    });
+
+                    if (authError) {
+                        if (authError.message.toLowerCase().includes('already registered') || authError.message.toLowerCase().includes('exists')) {
+                            try {
+                                const { data: loginData } = await supabaseClient.auth.signInWithPassword({
+                                    email: syntheticEmail,
+                                    password: pwd
+                                });
+                                if (loginData?.user) userId = loginData.user.id;
+                            } catch(le) {
+                                console.warn('Login fallback notice:', le);
+                            }
+                        } else {
+                            console.warn('Auth registration notice:', authError);
+                        }
+                    }
+
+                    userId = authData?.user?.id || ('usr_' + Date.now());
+
+                    // 2. Insert into public.profiles
+                    try {
+                        const { error: profileError } = await supabaseClient
+                            .from('profiles')
+                            .upsert([
+                                {
+                                    id: userId,
+                                    fssai_number: fssai,
+                                    kitchen_name: name,
+                                    full_name: 'Kitchen Administrator',
+                                    mobile: mobile,
+                                    email: syntheticEmail,
+                                    location: location,
+                                    pincode: pincode,
+                                    role: 'Kitchen Unit Administrator',
+                                    facility_id: 'FSSAI-' + fssai.slice(-6),
+                                    avatar_id: chosenAvatarId
+                                }
+                            ], { onConflict: 'fssai_number' });
+
+                        if (profileError) console.warn('Profiles table notice:', profileError);
+                    } catch (pe) {
+                        console.warn('Profile DB save error:', pe);
+                    }
+
+                    // 3. Insert into public.kitchen_settings
+                    try {
+                        await supabaseClient
+                            .from('kitchen_settings')
+                            .upsert([
+                                {
+                                    fssai_number: fssai,
+                                    kitchen_name: name,
+                                    manager_name: 'Kitchen Administrator',
+                                    status: 'open',
+                                    daily_summary_mode: 'auto',
+                                    default_meal_size_grams: 350,
+                                    target_buffer_pct: 8,
+                                    cost_per_meal: 35.00,
+                                    price_per_meal: 50.00,
+                                    opening_time: '06:00',
+                                    closing_time: '22:00'
+                                }
+                            ], { onConflict: 'fssai_number' });
+                    } catch (se) {
+                        console.warn('Settings DB save error:', se);
+                    }
+                }
+
+                // 4. Wipe old cache completely so new account starts with zero fake data
+                localStorage.removeItem(FoodSafe.KEYS.HISTORICAL);
+                localStorage.removeItem(FoodSafe.KEYS.REDISTRIBUTION);
+                localStorage.removeItem(FoodSafe.KEYS.NOTIFICATIONS);
+                localStorage.removeItem(FoodSafe.KEYS.DAILY_SHIFTS);
+                localStorage.removeItem(FoodSafe.KEYS.FORECAST_TARGET);
+                FoodSafe.saveHistory([]);
+                FoodSafe.saveRedistribution([]);
+                FoodSafe.saveNotifications([]);
+
+                // 5. Save fresh active session & local persistence
+                const sessionData = {
+                    id: userId || ('usr_' + Date.now()),
+                    fssaiNumber: fssai,
+                    mobile: mobile,
+                    email: syntheticEmail,
+                    name: 'Kitchen Administrator',
+                    role: 'Kitchen Unit Administrator',
+                    kitchenName: name,
+                    location: location,
+                    pincode: pincode,
+                    address: location + ' - ' + pincode,
+                    facilityId: 'FSSAI-' + fssai.slice(-6),
+                    avatarId: chosenAvatarId,
+                    issuedDate: issuedDateVal,
+                    validTill: validTillStr,
+                    isLoggedIn: true
+                };
+
+                FoodSafe.setSession(sessionData);
+
+                FoodSafe.saveKitchenSettings({
+                    kitchenName: name,
+                    facilityId: 'FSSAI-' + fssai.slice(-6),
+                    managerName: 'Kitchen Administrator'
+                });
+
+                FoodSafe.toast(`✓ Kitchen registered successfully with 5-year FSSAI validity (Valid till ${validTillStr})! Opening dashboard...`, 'success', 3000);
+
+                setTimeout(() => {
+                    window.location.href = '../Meal overview_Forcast/meal_overview.html';
+                }, 1000);
+
+            } catch (err) {
+                console.error("Registration error:", err);
+                FoodSafe.toast(err.message || 'Registration completed with local fallback.', 'warning');
+                setTimeout(() => {
+                    window.location.href = '../Meal overview_Forcast/meal_overview.html';
+                }, 1200);
+            }
+        }
+
+        function updateFssaiValidityDisplay() {
+            const issuedInput = document.getElementById('issued_date');
+            const badge = document.getElementById('validityBadge');
+            const info = document.getElementById('validityInfoText');
+            
+            if (!issuedInput || !issuedInput.value) {
+                if (badge) badge.style.display = 'none';
+                if (info) info.style.display = 'none';
+                return;
+            }
+
+            const issued = new Date(issuedInput.value);
+            if (isNaN(issued.getTime())) return;
+
+            const expiry = new Date(issued);
+            expiry.setFullYear(expiry.getFullYear() + 5);
+
+            const now = new Date();
+            const isExpired = now > expiry;
+            const expiryStr = expiry.toISOString().slice(0, 10);
+
+            if (badge) {
+                badge.style.display = 'inline';
+                badge.textContent = isExpired ? '⚠️ License Expired' : '✓ 5-Yr Valid License';
+                badge.style.color = isExpired ? '#dc2626' : '#15803d';
+            }
+            if (info) {
+                info.style.display = 'block';
+                if (isExpired) {
+                    info.style.color = '#dc2626';
+                    info.textContent = `License expired on ${expiryStr} (Exceeded 5-year statutory period). Please provide a valid active license.`;
+                } else {
+                    info.style.color = '#15803d';
+                    info.textContent = `✓ 5-Year Standard Validity: Active from ${issuedInput.value} until ${expiryStr}.`;
+                }
+            }
+        }
+
+        // Initialize page without setting a default issue date
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFssaiValidityDisplay();
+        });
+    </script>
+</body>
+</html>

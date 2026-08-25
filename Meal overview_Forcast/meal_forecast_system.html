@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Loop - Demand Forecast &amp; Surplus Matching System</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('meal_system_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e) {}
+        })();
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .phone-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #146c73;
+            text-decoration: none;
+            padding: 3px 8px;
+            background: #e6f5f6;
+            border: 1px solid #a3dce1;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .phone-link:hover {
+            background: #d0edf0;
+            color: #0e5359;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(24, 127, 135, 0.15);
+        }
+        [data-theme="dark"] .phone-link {
+            background: rgba(24, 127, 135, 0.15);
+            border-color: rgba(24, 127, 135, 0.4);
+            color: #a3dce1;
+        }
+        .btn-dispatch {
+            padding: 6px 13px;
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
+        }
+        .btn-dispatch:hover {
+            background: linear-gradient(135deg, #15803d, #166534);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
+        }
+        .btn-dispatch-outline {
+            padding: 6px 12px;
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary-border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .btn-dispatch-outline:hover {
+            background: var(--primary-subtle);
+            border-color: var(--primary);
+        }
+        .food-chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+            margin-bottom: 12px;
+        }
+        .food-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--bg-card, #ffffff);
+            border: 1px solid var(--border-color, #cbd5e1);
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-main, #334155);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .food-chip:hover {
+            border-color: var(--primary, #187F87);
+            color: var(--primary, #187F87);
+            background: var(--primary-subtle, rgba(24, 127, 135, 0.12));
+            transform: translateY(-1px);
+        }
+        .food-chip.active {
+            background: #187F87 !important;
+            border-color: #187F87 !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(24, 127, 135, 0.35);
+        }
+        .food-chip svg {
+            width: 12px;
+            height: 12px;
+            display: none;
+        }
+        .food-chip.active svg {
+            display: inline-block;
+            stroke: #ffffff;
+        }
+        .history-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+        .history-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .history-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .history-toolbar select, .history-toolbar button {
+            padding: 6px 12px;
+            font-size: 0.82rem;
+            border-radius: 6px;
+        }
+        .matching-alert-card {
+            background: linear-gradient(135deg, rgba(230, 245, 246, 0.95), rgba(240, 253, 244, 0.95));
+            border: 1px solid #a3dce1;
+            border-left: 4px solid #187F87;
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        [data-theme="dark"] .matching-alert-card {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: #334155;
+            border-left-color: #187F87;
+        }
+        .toast-notify {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            font-size: 0.88rem;
+            font-weight: 500;
+            border-left: 4px solid #22c55e;
+        }
+        /* Modal for adding custom redistribution log */
+        .custom-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .custom-modal-overlay.active {
+            display: flex;
+        }
+        .custom-modal-box {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px 24px;
+            width: 100%;
+            max-width: 540px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            animation: modalFadeIn 0.22s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        [data-theme="dark"] .custom-modal-box {
+            background: #1e293b;
+            color: #f8fafc;
+            border-color: #334155;
+        }
+        .modal-section-group {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 2px;
+        }
+        [data-theme="dark"] .modal-section-group {
+            background: #0f172a;
+            border-color: #334155;
+        }
+        .modal-section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .modal-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .modal-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 0px;
+        }
+        .modal-field label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .modal-field input, .modal-field select {
+            padding: 7px 11px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.84rem;
+            background: #ffffff;
+            color: inherit;
+        }
+        [data-theme="dark"] .modal-field input, [data-theme="dark"] .modal-field select {
+            background: #1e293b;
+            border-color: #475569;
+        }
+        .modal-field input:focus, .modal-field select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(24, 127, 135, 0.15);
+        }
+        .modal-summary-banner {
+            background: #e6f5f6;
+            border: 1px solid #a3dce1;
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: #0e5359;
+            font-weight: 600;
+        }
+        [data-theme="dark"] .modal-summary-banner {
+            background: rgba(16, 94, 100, 0.3);
+            border-color: #0e5359;
+            color: #a3dce1;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Taller Full-Height Side Panel Navigation -->
+        <aside class="side-panel">
+            <div class="side-panel-top">
+                <div class="side-panel-header">
+                    <div class="side-panel-logo" aria-label="Meal Loop Logo" title="Meal Loop - Kitchen &amp; Forecast Hub">
+                        <img src="logo.png" alt="Meal Loop Logo" class="side-panel-logo-img">
+                    </div>
+                    <div class="side-panel-brand">
+                        <span class="side-panel-title">Meal Loop</span>
+                        <span class="side-panel-subtitle">Kitchen &amp; Forecast Hub</span>
+                    </div>
+                </div>
+                
+                <!-- Side Panel Primary Navigation Links -->
+                <nav class="side-panel-nav">
+                    <a href="meal_overview.html" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="7" height="9" x="3" y="3" rx="1"/>
+                            <rect width="7" height="5" x="14" y="3" rx="1"/>
+                            <rect width="7" height="9" x="14" y="12" rx="1"/>
+                            <rect width="7" height="5" x="3" y="16" rx="1"/>
+                        </svg>
+                        <span>Meal Overview</span>
+                    </a>
+
+                    <button type="button" class="nav-btn active" id="btnNavForecast" onclick="switchTab('forecastView', this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"/>
+                            <path d="m19 9-5 5-4-4-3 3"/>
+                        </svg>
+                        <span>Demand Forecast</span>
+                    </button>
+                    
+                    <button type="button" class="nav-btn" id="btnNavSurplus" onclick="switchTab('surplusDistributionView', this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                        <span>Surplus, Safety &amp; Results</span>
+                    </button>
+
+                    <a href="meal_today_summery.html" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        <span>Daily Summary</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Bottom Section: Divided Settings & Logout -->
+            <div class="side-panel-bottom">
+                <div class="side-panel-divider"></div>
+                <nav class="side-panel-nav" style="margin-top: 6px;">
+                    <a href="meal_overview.html#settingsView" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <span>System Settings</span>
+                    </a>
+                    <button type="button" class="nav-btn nav-btn-logout" onclick="handleLogout()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" x2="9" y1="12" y2="12"/>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper with Integrated Header & Content Area -->
+        <div class="main-wrapper">
+            <!-- Integrated Top Header Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <div class="top-bar-date">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                            <line x1="16" x2="16" y1="2" y2="6" />
+                            <line x1="8" x2="8" y1="2" y2="6" />
+                            <line x1="3" x2="21" y1="10" y2="10" />
+                        </svg>
+                        <span id="forecastHeaderDate">Sunday, August 15, 2026</span>
+                    </div>
+
+                    <div class="top-divider"></div>
+
+                    <span class="status-badge status-open" id="forecastKitchenStatusBadge" ondblclick="toggleKitchenStatus()" style="cursor: pointer; user-select: none;" title="Double-click to toggle Kitchen Status (Open/Closed)">
+                        <span class="status-dot"></span>
+                        <span id="forecastKitchenStatusText">Kitchen Status: Open</span>
+                    </span>
+                </div>
+
+                <div class="top-bar-right">
+                    <!-- Notification Button -->
+                    <div style="position: relative;">
+                        <button type="button" class="icon-btn" id="notifBtn" onclick="toggleDropdown('notifDropdown')" title="Notifications">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                            </svg>
+                            <span class="icon-badge" id="forecastNotifBadge">2</span>
+                        </button>
+
+                        <div class="dropdown-menu" id="notifDropdown">
+                            <div style="padding: 8px 16px; font-weight: 700; font-size: 0.85rem; color: var(--primary-dark); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                                <span>Recent Notifications</span>
+                                <a href="javascript:void(0)" onclick="clearAllNotifications()" style="font-size: 0.72rem; color: var(--primary); text-decoration: none;">Clear All</a>
+                            </div>
+                            <div id="forecastNotifContainer">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Theme Toggle Button -->
+                    <button type="button" class="icon-btn theme-toggle-btn" id="themeQuickToggleBtn" onclick="FoodSafe.toggleTheme()" title="Toggle Dark / Light Mode" aria-label="Toggle Theme">
+                        <svg class="theme-icon-light" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                        </svg>
+                        <svg class="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Settings Quick Button -->
+                    <a href="meal_overview.html#settingsView" class="icon-btn" title="Settings">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </a>
+
+                    <!-- User Profile Dropdown -->
+                    <div style="position: relative;">
+                        <button type="button" class="user-profile-btn" onclick="toggleDropdown('userDropdown')">
+                            <div class="user-avatar" id="forecastUserAvatar">M</div>
+                            <span class="user-name" id="forecastUserName">Kitchen Manager</span>
+                            <svg class="user-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </button>
+
+                        <div class="dropdown-menu" id="userDropdown">
+                            <div style="padding: 8px 14px; border-bottom: 1px solid var(--border-color);">
+                                <div style="font-weight: 700; font-size: 0.84rem; color: var(--text-main);" id="forecastDropName">Kitchen Manager</div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted);" id="forecastDropRole">Kitchen Administrator</div>
+                            </div>
+                            <button type="button" class="dropdown-item" onclick="FoodSafeAvatars.openPicker()">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                <span>Choose Profile Avatar</span>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button type="button" class="dropdown-item" style="color: #ef4444;" onclick="handleLogout()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                    <polyline points="16 17 21 12 16 7" />
+                                    <line x1="21" x2="9" y1="12" y2="12" />
+                                </svg>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- OPTION 1: Demand Forecast View -->
+                <div id="forecastView" class="view-panel active">
+                    <h1>Demand Forecast</h1>
+
+                    <!-- Single Unified White Card Container -->
+                    <div class="unified-card">
+                        <!-- Subsection 1: Forecast Parameters & Configuration -->
+                        <div>
+                            <div class="card-section-title">
+                                <span>Forecast Parameters &amp; Meal Configuration</span>
+                                <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Predict future meal volume &amp; ingredients breakdown</span>
+                            </div>
+
+                            <form id="forecastForm" onsubmit="handleForecastSubmit(event)">
+                                <!-- What's on today's menu -->
+                                <div class="full-width">
+                                    <label for="todaysMenu">What's on Today's Menu?</label>
+                                    <input type="text" id="todaysMenu" name="todaysMenu" value="Steamed Rice, Dal Makhani, Mixed Veg Curry, Chapatis" placeholder="e.g. Steamed Rice, Dal Makhani, Mixed Veg Curry, Chapatis" oninput="syncMenuItems(); persistForecastInputChanges();">
+                                    <span class="info-hint">Items added here will be available for surplus checking &amp; redistribution</span>
+                                </div>
+
+                                <div>
+                                    <label for="date">Date:</label>
+                                    <input type="date" id="date" name="date" onchange="persistForecastInputChanges();">
+                                </div>
+                                <div>
+                                    <label for="mealType">Meal Type:</label>
+                                    <select id="mealType" name="mealType" onchange="handleMealTypeChange(this.value);">
+                                        <option value="breakfast">Breakfast (07:00 AM)</option>
+                                        <option value="lunch" selected>Lunch (11:30 AM)</option>
+                                        <option value="dinner">Dinner (20:30 PM / 8:30 PM)</option>
+                                        <option value="snack">Snack (17:30 PM / 5:30 PM)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="attendance">Expected Attendance:</label>
+                                    <input type="number" id="attendance" name="attendance" placeholder="e.g. 100" min="0" oninput="persistForecastInputChanges();">
+                                </div>
+                                <div>
+                                    <label for="weather">Weather Condition:</label>
+                                    <select id="weather" name="weather" onchange="persistForecastInputChanges();">
+                                        <option value="sunny" selected>Sunny</option>
+                                        <option value="cloudy">Cloudy</option>
+                                        <option value="rainy">Rainy</option>
+                                        <option value="snowy">Snowy</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="historical">Historical Consumption (last 3 days avg):</label>
+                                    <input type="number" id="historical" name="historical" placeholder="e.g. 90" min="0" oninput="persistForecastInputChanges();">
+                                </div>
+                                <div>
+                                    <label for="calendarEvent">Calendar Event:</label>
+                                    <select id="calendarEvent" name="calendarEvent" onchange="persistForecastInputChanges();">
+                                        <option value="none" selected>None</option>
+                                        <option value="holiday">Holiday</option>
+                                        <option value="exam">Exam Period</option>
+                                        <option value="vacation">Vacation/Break</option>
+                                        <option value="special">Special Event</option>
+                                    </select>
+                                </div>
+                                <button type="submit">Forecast Demand</button>
+                            </form>
+                        </div>
+
+                        <div class="card-section-divider"></div>
+
+                        <!-- Subsection 2: Forecast Results Output -->
+                        <div>
+                            <div class="card-section-title">
+                                <div>
+                                    <span>Forecast Results &amp; Calculated Preparation</span>
+                                    <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted); margin-left: 8px;">Real-time projection breakdown</span>
+                                </div>
+                                <button type="button" class="btn-clear-results" onclick="clearForecastResults()" title="Clear forecast results only (preserves form inputs above)">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                    </svg>
+                                    <span>Clear Results</span>
+                                </button>
+                            </div>
+                            <div id="forecastOutput">
+                                <div class="forecast-placeholder-card">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 18px;">
+                                        <div>
+                                            <span class="badge badge-info" style="font-size: 0.8rem;">Awaiting Demand Calculation</span>
+                                            <h3 class="forecast-result-title">Recommended Preparation: -- Portions</h3>
+                                            <div class="forecast-result-subtitle">Projected Demand: -- meals + -- buffer (8% safety)</div>
+                                        </div>
+                                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                                            <span class="badge badge-none">0% adjustment</span>
+                                            <button type="button" class="btn-dispatch" style="opacity: 0.65; pointer-events: none;" title="Calculate forecast above to activate">
+                                                 Apply as Today's Target
+                                             </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="stats-summary-grid" style="margin-bottom: 16px;">
+                                        <div class="stat-item">
+                                            <div class="stat-item-label">Expected Attendance</div>
+                                            <div class="stat-item-val">-- Pax</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-item-label">Historical Baseline</div>
+                                            <div class="stat-item-val">-- Meals</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-item-label">Raw Rice / Grains</div>
+                                            <div class="stat-item-val" style="color: var(--primary);">-- kg</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-item-label">Lentils &amp; Veggies</div>
+                                            <div class="stat-item-val" style="color: #16a34a;">-- kg</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="forecast-menu-banner">
+                                        <span><strong>Target Menu:</strong> Please select input parameters above and click "Forecast Demand"</span>
+                                        <button type="button" class="btn-dispatch" onclick="switchTab('surplusDistributionView', document.getElementById('btnNavSurplus'))">
+                                            Proceed to Surplus &amp; Safety &rarr;
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OPTION 2: Surplus, Safety, Matching Results & Redistribution History -->
+                <div id="surplusDistributionView" class="view-panel">
+                    <h1>Surplus, Safety &amp; Redistribution</h1>
+
+                    <!-- Single Unified White Card Container -->
+                    <div class="unified-card">
+                        <!-- Subsection 1: Surplus & Food Safety Parameters -->
+                        <div>
+                            <div class="card-section-title">
+                                <span>Surplus &amp; Food Safety Parameters</span>
+                                <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Identify surplus and assess safety thresholds</span>
+                            </div>
+
+                            <form id="surplusForm" onsubmit="handleCheckSurplus(event)">
+                                <div class="full-width">
+                                    <label for="surplusFoodItem" style="font-weight: 600; display: block; margin-bottom: 4px;">Which food item from Today's Menu to check for Surplus &amp; Redistribution?</label>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 4px;">
+                                        <div>
+                                            <label for="surplusFoodItem" style="font-size: 0.8rem; color: var(--text-muted);">From Today's Menu List:</label>
+                                            <select id="surplusFoodItem" name="surplusFoodItem" onchange="handleSurplusFoodItemChange(this.value);" style="width: 100%; margin-top: 4px;">
+                                                <option value="All Menu Items" selected>All Menu Items (Combo)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="customFoodItem" style="font-size: 0.8rem; color: var(--text-muted);">Or Custom / Specific Item Name:</label>
+                                            <input type="text" id="customFoodItem" name="customFoodItem" placeholder="e.g. Steamed Rice, Dal Makhani &amp; Mixed Veggies" oninput="handleCustomFoodInput(this.value);" style="width: 100%; margin-top: 4px;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="surplusShift">Meal Shift / Session:</label>
+                                    <select id="surplusShift" name="surplusShift" onchange="handleSurplusShiftChange(this.value);" style="width: 100%;">
+                                        <option value="breakfast">Breakfast (07:00 AM)</option>
+                                        <option value="lunch" selected>Lunch (11:30 AM)</option>
+                                        <option value="snacks">Snacks (17:30 PM / 5:30 PM)</option>
+                                        <option value="dinner">Dinner (20:30 PM / 8:30 PM)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="preparedQuantity">Prepared Quantity (meals/portions):</label>
+                                    <input type="number" id="preparedQuantity" name="preparedQuantity" placeholder="e.g. 102" min="0" oninput="handlePreparedQuantityChange();">
+                                </div>
+                                <div>
+                                    <label for="actualConsumption">Actual Consumption (meals/portions):</label>
+                                    <input type="number" id="actualConsumption" name="actualConsumption" placeholder="e.g. 85" min="0" oninput="handleActualConsumptionChange();">
+                                </div>
+                                <div>
+                                    <label for="storageTime">Storage Time (hours):</label>
+                                    <input type="number" id="storageTime" name="storageTime" value="2" min="0" required>
+                                </div>
+                                <div>
+                                    <label for="preparedTime">Prepared Time (hours:minutes):</label>
+                                    <input type="time" id="preparedTime" name="preparedTime" value="11:30">
+                                </div>
+                                <div>
+                                    <label for="storageTemp">Storage Temperature (°C):</label>
+                                    <input type="number" id="storageTemp" name="storageTemp" value="65" min="0" max="100" required>
+                                </div>
+                                <button type="submit">Check Surplus &amp; Matching</button>
+                            </form>
+                        </div>
+
+                        <div class="card-section-divider"></div>
+
+                        <!-- Subsection 2: Matching Results & Redistribution -->
+                        <div id="matchingResultsSection">
+                            <div class="card-section-title">
+                                <span>Matching &amp; Redistribution Results</span>
+                                <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Verified recipient organizations nearby ready for immediate dispatch</span>
+                            </div>
+
+                            <!-- Dynamic Matching Status Banner -->
+                            <div id="matchingSummaryCard" class="matching-alert-card">
+                                <div>
+                                    <div style="font-weight: 700; font-size: 1.05rem; color: var(--primary-dark); display: flex; align-items: center; gap: 8px;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                        <span id="matchSummaryTitle">Surplus Identified: 17 Portions (6.0 kg)</span>
+                                    </div>
+                                    <div id="matchSummarySubtitle" style="font-size: 0.84rem; color: var(--text-muted); margin-top: 4px;">
+                                        Safe &amp; Verified for Immediate Redistribution (65°C / 2h hold) &bull; 3 Verified Partner Matches Found
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <span class="badge badge-high" id="matchSafetyBadge" style="padding: 6px 12px; font-size: 0.82rem;">Safe &amp; Approved</span>
+                                    <button type="button" class="btn-dispatch" onclick="dispatchAllSurplus()">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Dispatch All (17 Meals)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Food Safety & Consumption Window Advisory Card -->
+                            <div id="foodSafetyAdvisoryBox" class="safety-advisory-card" style="margin-bottom: 14px; padding: 14px 18px; border-radius: 8px; border: 1px solid rgba(22, 163, 74, 0.3); background: rgba(22, 163, 74, 0.04); display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div id="advisoryIconBox" style="width: 34px; height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: rgba(22, 163, 74, 0.12); color: #16a34a; flex-shrink: 0;">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        </div>
+                                        <div>
+                                            <strong id="advisoryTitle" style="font-size: 0.92rem; color: var(--text-main); display: block;">Safe Consumption Window: 2.0 Hours Remaining</strong>
+                                            <span id="advisorySubtitle" style="font-size: 0.78rem; color: var(--text-muted);">Maintained under Hot Holding (65°C) &bull; Standard 4-Hour FSSAI &amp; HACCP Limit</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span id="advisoryExpiryTime" style="font-size: 0.82rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; background: rgba(22, 163, 74, 0.12); color: #16a34a;">Best consumed before 15:30</span>
+                                    </div>
+                                </div>
+                                <div id="advisoryGuidelinesText" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 2px;">
+                                    <strong>Operational Advice:</strong> Food is hot-safe. Transport in insulated containers above 60°C. If food cools below 60°C before distribution, reheat thoroughly to &gt;74°C for at least 2 minutes.
+                                </div>
+                            </div>
+
+                            <!-- Matching Controls & Strategy Toolbar -->
+                            <div class="matching-toolbar" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px;">
+                                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px;">
+                                    <div>
+                                        <label for="matchingStrategySelect" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 3px;">Matching Priority Strategy:</label>
+                                        <select id="matchingStrategySelect" onchange="recalculateMatchingResults()" style="padding: 6px 12px; font-size: 0.82rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
+                                            <option value="nearest" selected>Fastest ETA / Nearest Distance</option>
+                                            <option value="capacity">Maximum Intake Capacity (Bulk Drop)</option>
+                                            <option value="balanced">Proportional Multi-Partner Split</option>
+                                            <option value="childcare">Priority: Child Care &amp; Shelters</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="matchingRadiusSelect" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 3px;">Max Rescue Radius:</label>
+                                        <select id="matchingRadiusSelect" onchange="recalculateMatchingResults()" style="padding: 6px 12px; font-size: 0.82rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
+                                            <option value="10" selected>Within 10 km (All Verified)</option>
+                                            <option value="3">Within 3 km (&lt; 15 mins)</option>
+                                            <option value="5">Within 5 km (&lt; 20 mins)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <button type="button" class="btn-dispatch-outline" onclick="recalculateMatchingResults()" style="padding: 6px 14px; font-size: 0.82rem;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                                        <span>Refresh Matching</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- NGO Matching Table with Direct Call Links -->
+                            <table id="recipientsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Recipient Organization</th>
+                                        <th>Contact &amp; Phone Number</th>
+                                        <th>Eligibility Status</th>
+                                        <th>Meals Allocated</th>
+                                        <th>Distance &amp; ETA</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recipientsTableBody">
+                                    <!-- Populated dynamically via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-section-divider"></div>
+
+                        <!-- Subsection 3: Completed Redistribution History Log & Audit -->
+                        <div id="redistributionHistorySection">
+                            <div class="card-section-title">
+                                <span>Completed Redistribution History Log</span>
+                                <span style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Historical audit of dispatched surplus donations, recipient confirmation, and saved meals</span>
+                            </div>
+
+                            <!-- History Action Toolbar -->
+                            <div class="history-toolbar">
+                                <div class="history-toolbar-left">
+                                    <label for="historyStatusFilter" style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Filter Status:</label>
+                                    <select id="historyStatusFilter" onchange="filterRedistributionHistory()">
+                                        <option value="all">All Dispatches</option>
+                                        <option value="Delivered">Delivered</option>
+                                        <option value="In Transit">In Transit</option>
+                                        <option value="Dispatched">Dispatched</option>
+                                    </select>
+                                    <input type="text" id="historySearchInput" placeholder="Search NGO or Food..." style="padding: 6px 12px; font-size: 0.82rem; width: 180px;" oninput="filterRedistributionHistory()">
+                                </div>
+                                <div class="history-toolbar-right">
+                                    <button type="button" class="btn-dispatch-outline" onclick="openAddRecipientModal()">
+                                        + Add Recipient
+                                    </button>
+                                    <button type="button" class="btn-dispatch-outline" onclick="exportRedistributionHistory()">
+                                        Export CSV
+                                    </button>
+                                    <button type="button" class="btn-dispatch-outline" style="color: #dc2626; border-color: #fca5a5;" onclick="clearRedistributionHistory()">
+                                        Clear History
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Redistribution History Table -->
+                            <table id="redistributionHistoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Dispatched Date &amp; Shift</th>
+                                        <th>Recipient NGO</th>
+                                        <th>Phone Number</th>
+                                        <th>Food Item Dispatched</th>
+                                        <th>Portions Donated</th>
+                                        <th>Delivery Status</th>
+                                        <th>Avoided CO2</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="redistributionHistoryBody">
+                                    <!-- Populated dynamically from Meal Loop / localStorage -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for Adding Recipient & Surplus Redistribution Record -->
+    <div id="addRecipientModal" class="custom-modal-overlay">
+        <div class="custom-modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        + Add Recipient &amp; Surplus Dispatch
+                    </h3>
+                    <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+                        Register verified recipient partner and record surplus donation
+                    </div>
+                </div>
+                <button type="button" onclick="closeAddRecipientModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); line-height: 1;" title="Close">&times;</button>
+            </div>
+
+            <form id="manualHistoryForm" onsubmit="handleManualHistorySubmit(event)" style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="modal-section-group">
+                    <div class="modal-section-title">1. Recipient Partner &amp; Location</div>
+                    <div class="modal-field" style="margin-bottom: 8px;">
+                        <label for="modalNgoName">Recipient Organization / NGO Name &amp; Area:</label>
+                        <input type="text" id="modalNgoName" required placeholder="e.g. Hope Shelter Home (Sector 4 Branch)" list="knownNgoList">
+                        <datalist id="knownNgoList">
+                            <option value="Hope Shelter Home (Sector 4 Branch)">
+                            <option value="Community Food Bank (Downtown Center)">
+                            <option value="Aasra Children Care (West Colony Wing)">
+                            <option value="Robin Hood Army (Central Distribution)">
+                            <option value="Akshaya Patra Foundation (City Relief Hub)">
+                        </datalist>
+                    </div>
+
+                    <div class="modal-grid-2">
+                        <div class="modal-field">
+                            <label for="modalContactPerson">Contact Coordinator:</label>
+                            <input type="text" id="modalContactPerson" placeholder="e.g. Anil Sharma / Sister Mary">
+                        </div>
+                        <div class="modal-field">
+                            <label for="modalNgoPhone">Contact Phone Number:</label>
+                            <input type="tel" id="modalNgoPhone" required placeholder="e.g. +91 98765 43210">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-section-group">
+                    <div class="modal-section-title">2. Surplus Food &amp; Quantity</div>
+                    <div class="modal-field" style="margin-bottom: 8px;">
+                        <label for="modalFoodItem">Food Item(s) Being Dispatched:</label>
+                        <input type="text" id="modalFoodItem" required placeholder="e.g. Steamed Rice, Dal Makhani &amp; Mixed Veggies">
+                    </div>
+
+                    <div class="modal-grid-2">
+                        <div class="modal-field">
+                            <label for="modalPortions">Number of Portions (meals):</label>
+                            <input type="number" id="modalPortions" min="1" value="10" required>
+                        </div>
+                        <div class="modal-field">
+                            <label for="modalShift">Meal Shift / Service:</label>
+                            <select id="modalShift">
+                                <option value="Lunch" selected>Today's Lunch</option>
+                                <option value="Dinner">Today's Dinner</option>
+                                <option value="Breakfast">Breakfast Shift</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px;">
+                    <button type="button" class="btn-dispatch-outline" onclick="closeAddRecipientModal()">Cancel</button>
+                    <button type="submit" class="btn-dispatch" style="padding: 8px 16px; font-size: 0.86rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Save Recipient &amp; Record Log
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase JS Client & App Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabaseClient.js"></script>
+    <!-- Core State & Avatar Scripts -->
+    <script src="../shared_foodsafe.js"></script>
+    <script src="foodsafe_avatars.js"></script>
+    <script>
+        const CO2_FACTOR = 2.00;
+
+        const RECIPIENT_PARTNERS = [
+            {
+                name: "Hope Shelter Home",
+                area: "Sector 4 Branch",
+                category: "Shelter Home",
+                contact: "Anil Sharma",
+                phone: "+91 98765 43210",
+                food: "Steamed Rice & Dal Combo",
+                safety: "Safe & Approved",
+                distanceKm: 2.4,
+                distance: "2.4 km (~12 mins)",
+                defaultPortions: 10
+            },
+            {
+                name: "Community Food Bank",
+                area: "Downtown Center",
+                category: "Community Food Bank",
+                contact: "Sister Mary",
+                phone: "+91 98123 45678",
+                food: "Mixed Vegetables & Chapatis",
+                safety: "Safe & Approved",
+                distanceKm: 3.8,
+                distance: "3.8 km (~18 mins)",
+                defaultPortions: 7
+            },
+            {
+                name: "Aasra Children Care",
+                area: "West Colony Wing",
+                category: "Child Care & Orphanage",
+                contact: "Vikram Rathore",
+                phone: "+91 99887 76655",
+                food: "Nutrient Meal Combo",
+                safety: "Safe & Approved",
+                distanceKm: 5.1,
+                distance: "5.1 km (~22 mins)",
+                defaultPortions: 8
+            },
+            {
+                name: "Akshaya Patra Relief Hub",
+                area: "Central Industrial Area",
+                category: "Emergency Relief Hub",
+                contact: "Rajesh Kumar",
+                phone: "+91 98450 11223",
+                food: "Rice, Dal & Vegetable Curry",
+                safety: "Safe & Approved",
+                distanceKm: 6.2,
+                distance: "6.2 km (~25 mins)",
+                defaultPortions: 15
+            }
+        ];
+
+        let lastCalculatedForecast = null;
+
+        function switchTab(viewId, buttonElement) {
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.querySelectorAll('.side-panel-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+
+            const selectedPanel = document.getElementById(viewId);
+            if (selectedPanel) selectedPanel.classList.add('active');
+            if (buttonElement) buttonElement.classList.add('active');
+
+            if (viewId === 'surplusDistributionView') {
+                syncMenuItems();
+                renderMatchingTable();
+                renderRedistributionHistory();
+            }
+        }
+
+        function toggleDropdown(id) {
+            const dropdown = document.getElementById(id);
+            if (!dropdown) return;
+            const isVisible = dropdown.classList.contains('active');
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('active'));
+            if (!isVisible) dropdown.classList.add('active');
+        }
+
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-menu') && !e.target.closest('.icon-btn') && !e.target.closest('.user-profile-btn')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('active'));
+            }
+        });
+
+        function syncMenuItems() {
+            const menuInput = document.getElementById('todaysMenu');
+            const selectDropdown = document.getElementById('surplusFoodItem');
+            if (!selectDropdown) return;
+
+            let text = menuInput ? menuInput.value.trim() : '';
+            if (!text) {
+                const target = FoodSafe.getTarget();
+                text = (target && target.menu) || 'Steamed Rice, Dal Makhani, Mixed Veg Curry, Chapatis';
+            }
+
+            const currentVal = selectDropdown.value || 'All Menu Items';
+            selectDropdown.innerHTML = '<option value="All Menu Items">All Menu Items (Combo)</option>';
+
+            const rawItems = text ? text.split(/[,;+]+/).map(item => item.trim()).filter(Boolean) : [];
+            const uniqueItems = Array.from(new Set(rawItems));
+
+            uniqueItems.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item;
+                opt.textContent = item;
+                if (item === currentVal) opt.selected = true;
+                selectDropdown.appendChild(opt);
+            });
+        }
+
+        function handleSurplusFoodItemChange(val) {
+            const customInput = document.getElementById('customFoodItem');
+            if (customInput) {
+                if (val && val !== 'All Menu Items') {
+                    customInput.value = val;
+                } else {
+                    customInput.value = '';
+                }
+            }
+
+            updateActiveFoodSelection();
+            autoRecalcSurplusPreview();
+            persistSurplusInputChanges();
+        }
+
+        const SHIFT_DEFAULT_PREP_TIMES = {
+            'breakfast': '07:00',
+            'lunch': '11:30',
+            'snack': '17:30',
+            'snacks': '17:30',
+            'dinner': '20:30'
+        };
+
+        function setPreparedTimeForShift(shiftName) {
+            const normalized = (shiftName || 'lunch').toLowerCase().trim();
+            const defaultTime = SHIFT_DEFAULT_PREP_TIMES[normalized] || '11:30';
+            const prepTimeEl = document.getElementById('preparedTime');
+            if (prepTimeEl) {
+                prepTimeEl.value = defaultTime;
+            }
+            const surplusShiftEl = document.getElementById('surplusShift');
+            if (surplusShiftEl) {
+                const targetVal = normalized === 'snack' ? 'snacks' : normalized;
+                if (surplusShiftEl.value !== targetVal) surplusShiftEl.value = targetVal;
+            }
+            const forecastMealTypeEl = document.getElementById('mealType');
+            if (forecastMealTypeEl) {
+                const targetForecastVal = normalized === 'snacks' ? 'snack' : normalized;
+                if (forecastMealTypeEl.value !== targetForecastVal) forecastMealTypeEl.value = targetForecastVal;
+            }
+            const storageTime = parseFloat(document.getElementById('storageTime')?.value) || 2;
+            const storageTemp = parseFloat(document.getElementById('storageTemp')?.value) || 65;
+            updateFoodSafetyAdvisory(storageTime, storageTemp, defaultTime);
+        }
+
+        function handleSurplusShiftChange(shiftName) {
+            setPreparedTimeForShift(shiftName);
+            persistSurplusInputChanges();
+        }
+
+        function handleMealTypeChange(mealType) {
+            setPreparedTimeForShift(mealType);
+            persistForecastInputChanges();
+        }
+
+        function handleCustomFoodInput(val) {
+            const selectDropdown = document.getElementById('surplusFoodItem');
+            if (selectDropdown) {
+                const exists = Array.from(selectDropdown.options).some(o => o.value.toLowerCase() === val.toLowerCase());
+                if (exists) {
+                    selectDropdown.value = val;
+                } else {
+                    selectDropdown.value = 'All Menu Items';
+                }
+            }
+
+            updateActiveFoodSelection();
+            autoRecalcSurplusPreview();
+            persistSurplusInputChanges();
+        }
+
+        function getSelectedFoodItem() {
+            const custom = document.getElementById('customFoodItem')?.value?.trim();
+            if (custom) return custom;
+            const sel = document.getElementById('surplusFoodItem')?.value;
+            if (sel && sel !== '') return sel;
+            return 'All Menu Items (Combo)';
+        }
+
+        function updateActiveFoodSelection() {
+            const food = getSelectedFoodItem();
+            const prepInput = document.getElementById('preparedQuantity');
+            const consInput = document.getElementById('actualConsumption');
+            const prep = Math.max(0, parseFloat(prepInput ? prepInput.value : 0) || 0);
+            const cons = Math.min(prep, parseFloat(consInput ? consInput.value : 0) || 0);
+            const surplus = Math.max(0, prep - cons);
+            const storageTime = parseFloat(document.getElementById('storageTime')?.value) || 0;
+            const storageTemp = parseFloat(document.getElementById('storageTemp')?.value) || 0;
+            const isSafe = storageTime <= 4 && (storageTemp >= 60 || storageTemp <= 5);
+
+            renderMatchingTable(surplus, isSafe, food);
+        }
+
+        // Demand Forecasting Engine (Powered by Gemini AI)
+        async function handleForecastSubmit(e) {
+            if (e) e.preventDefault();
+            const menu = document.getElementById('todaysMenu').value.trim() || 'Steamed Rice, Dal Makhani, Mixed Veg Curry, Chapatis';
+            const date = document.getElementById('date').value || new Date().toISOString().slice(0, 10);
+            const mealType = document.getElementById('mealType').value;
+            const attStr = document.getElementById('attendance')?.value?.trim();
+            const histStr = document.getElementById('historical')?.value?.trim();
+            const attendance = attStr !== '' && attStr !== undefined ? parseInt(attStr) : 0;
+            const historical = histStr !== '' && histStr !== undefined ? parseInt(histStr) : 0;
+            const weather = document.getElementById('weather').value;
+            const calendarEvent = document.getElementById('calendarEvent').value;
+
+            if (attendance <= 0 && historical <= 0) {
+                FoodSafe.toast('Please enter Expected Attendance or Historical Consumption to forecast demand.', 'warning');
+                return;
+            }
+
+            const outputEl = document.getElementById('forecastOutput');
+            if (outputEl) {
+                outputEl.innerHTML = `<div style="padding: 20px; text-align: center;"><div class="spinner"></div><p style="margin-top: 10px; color: var(--primary); font-weight: 600;">Gemini AI is analyzing conditions...</p></div>`;
+            }
+
+            try {
+                const response = await fetch('/api/forecast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ menu, date, mealType, attendance, historical, weather, event: calendarEvent })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch forecast from server.');
+                }
+
+                const data = await response.json();
+
+                const recommendedPrep = data.recommendedPrep;
+                const projectedDemand = data.projectedDemand;
+                const safetyBuffer = data.safetyBuffer;
+                const multiplier = data.multiplier;
+                const multiplier_explanation = data.multiplier_explanation;
+                
+                const riceKg = data.raw_ingredients?.riceKg || 0;
+                const dalKg = data.raw_ingredients?.dalKg || 0;
+                const vegKg = data.raw_ingredients?.vegKg || 0;
+                const oilL = data.raw_ingredients?.oilL || 0;
+                const flourKg = data.raw_ingredients?.flourKg || 0;
+
+                lastCalculatedForecast = {
+                    portions: recommendedPrep,
+                    projectedDemand,
+                    safetyBuffer,
+                    menu,
+                    date,
+                    mealType,
+                    weather,
+                    event: calendarEvent,
+                    attendance,
+                    historical,
+                    riceKg,
+                    dalKg,
+                    vegKg,
+                    oilL,
+                    flourKg
+                };
+
+                // Set recommended preparation in preparedQuantity
+                const prepInput = document.getElementById('preparedQuantity');
+                if (prepInput) prepInput.value = recommendedPrep;
+
+                autoRecalcSurplusPreview();
+                FoodSafe.setTarget(lastCalculatedForecast);
+
+                if (outputEl) {
+                    outputEl.innerHTML = `
+                        <div class="forecast-result-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 18px;">
+                                <div>
+                                    <span class="badge badge-high" style="font-size: 0.8rem; background-color: #fce7f3; color: #db2777; border-color: #fbcfe8;">✨ Powered by Gemini AI</span>
+                                    <h3 class="forecast-result-title">Recommended Preparation: ${recommendedPrep} Portions</h3>
+                                    <div class="forecast-result-subtitle">Projected Demand: ${projectedDemand} meals + ${safetyBuffer} buffer</div>
+                                </div>
+                                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span class="badge ${multiplier >= 1.0 ? 'badge-high' : 'badge-medium'}" title="${multiplier_explanation}">${((multiplier - 1.0) * 100) >= 0 ? '+' : ''}${((multiplier - 1.0) * 100).toFixed(0)}% adjustment</span>
+                                        <button type="button" class="btn-clear-results" onclick="clearForecastResults()" title="Clear forecast results">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                            </svg>
+                                            <span>Clear</span>
+                                        </button>
+                                    </div>
+                                    <button type="button" class="btn-dispatch" onclick="applyForecastAsActiveTarget()">
+                                        Apply as Today's Target
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px; font-style: italic;">
+                                AI Reasoning: ${multiplier_explanation}
+                            </div>
+
+                            <div class="stats-summary-grid" style="margin-bottom: 16px;">
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Expected Attendance</div>
+                                    <div class="stat-item-val">${attendance} Pax</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Historical Baseline</div>
+                                    <div class="stat-item-val">${historical} Meals</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Raw Rice / Grains</div>
+                                    <div class="stat-item-val" style="color: var(--primary);">${riceKg} kg</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-item-label">Lentils &amp; Veggies</div>
+                                    <div class="stat-item-val" style="color: #16a34a;">${(parseFloat(dalKg) + parseFloat(vegKg)).toFixed(1)} kg</div>
+                                </div>
+                            </div>
+
+                            <div class="forecast-menu-banner">
+                                <span><strong>Target Menu:</strong> ${menu}</span>
+                                <button type="button" class="btn-dispatch" onclick="switchTab('surplusDistributionView', document.getElementById('btnNavSurplus'))">
+                                    Proceed to Surplus &amp; Safety &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                FoodSafe.toast(`Demand forecast calculated: ${recommendedPrep} portions recommended.`, 'success');
+
+            } catch (err) {
+                console.error(err);
+                if (outputEl) {
+                    outputEl.innerHTML = `<div style="padding: 20px; text-align: center; color: #dc2626; font-weight: 500;">Failed to generate forecast: ${err.message}</div>`;
+                }
+                FoodSafe.toast('AI Forecasting Error. Check logs.', 'error');
+            }
+        }
+
+        function clearForecastResults() {
+            lastCalculatedForecast = null;
+            const outputEl = document.getElementById('forecastOutput');
+            if (outputEl) {
+                outputEl.innerHTML = `
+                    <div class="forecast-placeholder-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 18px;">
+                            <div>
+                                <span class="badge badge-info" style="font-size: 0.8rem;">Awaiting Demand Calculation</span>
+                                <h3 class="forecast-result-title">Recommended Preparation: -- Portions</h3>
+                                <div class="forecast-result-subtitle">Projected Demand: -- meals + -- buffer (8% safety)</div>
+                            </div>
+                            <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                                <span class="badge badge-none">0% adjustment</span>
+                                <button type="button" class="btn-dispatch" style="opacity: 0.65; pointer-events: none;" title="Calculate forecast above to activate">
+                                    Apply as Today's Target
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="stats-summary-grid" style="margin-bottom: 16px;">
+                            <div class="stat-item">
+                                <div class="stat-item-label">Expected Attendance</div>
+                                <div class="stat-item-val">-- Pax</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-item-label">Historical Baseline</div>
+                                <div class="stat-item-val">-- Meals</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-item-label">Raw Rice / Grains</div>
+                                <div class="stat-item-val" style="color: var(--primary);">-- kg</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-item-label">Lentils &amp; Veggies</div>
+                                <div class="stat-item-val" style="color: #16a34a;">-- kg</div>
+                            </div>
+                        </div>
+
+                        <div class="forecast-menu-banner">
+                            <span><strong>Target Menu:</strong> Please select input parameters above and click "Forecast Demand"</span>
+                            <button type="button" class="btn-dispatch" onclick="switchTab('surplusDistributionView', document.getElementById('btnNavSurplus'))">
+                                Proceed to Surplus &amp; Safety &rarr;
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            FoodSafe.toast('Forecast results cleared. Form inputs preserved.', 'info');
+        }
+
+        function applyForecastAsActiveTarget() {
+            if (!lastCalculatedForecast) return;
+            FoodSafe.setTarget(lastCalculatedForecast);
+            FoodSafe.toast(`Applied ${lastCalculatedForecast.portions} portions to Today's Active Kitchen Target!`, 'success');
+        }
+
+        // Surplus & Safety Compliance Assessment
+        function handlePreparedQuantityChange() {
+            const prepInput = document.getElementById('preparedQuantity');
+            const consInput = document.getElementById('actualConsumption');
+            if (!prepInput || !consInput) return;
+
+            const prepStr = prepInput.value.trim();
+            const prep = prepStr === '' ? 0 : Math.max(0, parseFloat(prepStr) || 0);
+
+            const consStr = consInput.value.trim();
+            if (consStr !== '') {
+                let cons = parseFloat(consStr) || 0;
+                if (prep > 0 && cons > prep) {
+                    consInput.value = prep;
+                }
+            }
+
+            autoRecalcSurplusPreview();
+            persistSurplusInputChanges();
+        }
+
+        function handleActualConsumptionChange() {
+            const prepInput = document.getElementById('preparedQuantity');
+            const consInput = document.getElementById('actualConsumption');
+            if (!prepInput || !consInput) return;
+
+            const prepStr = prepInput.value.trim();
+            const prep = prepStr === '' ? 0 : Math.max(0, parseFloat(prepStr) || 0);
+
+            const consStr = consInput.value.trim();
+            // Allow empty input without snapping to 0 or defaults
+            if (consStr !== '') {
+                let cons = parseFloat(consStr) || 0;
+                if (prep > 0 && cons > prep) {
+                    consInput.value = prep;
+                }
+            }
+
+            autoRecalcSurplusPreview();
+            persistSurplusInputChanges();
+        }
+
+        function handleCheckSurplus(e) {
+            if (e) e.preventDefault();
+            const prepInput = document.getElementById('preparedQuantity');
+            const consInput = document.getElementById('actualConsumption');
+            const prepStr = prepInput ? prepInput.value.trim() : '';
+            const consStr = consInput ? consInput.value.trim() : '';
+
+            if (prepStr === '') {
+                FoodSafe.toast('Please enter prepared quantity (meals/portions).', 'warning');
+                if (prepInput) prepInput.focus();
+                return;
+            }
+
+            const prep = Math.max(0, parseFloat(prepStr) || 0);
+            let cons = consStr === '' ? 0 : parseFloat(consStr) || 0;
+
+            if (cons > prep) {
+                cons = prep;
+                if (consInput) consInput.value = prep;
+            }
+
+            const storageTime = parseFloat(document.getElementById('storageTime')?.value) || 0;
+            const storageTemp = parseFloat(document.getElementById('storageTemp')?.value) || 0;
+            const foodItem = getSelectedFoodItem();
+
+            const surplus = Math.max(0, prep - cons);
+            const isSafe = storageTime <= 4 && (storageTemp >= 60 || storageTemp <= 5);
+
+            const titleEl = document.getElementById('matchSummaryTitle');
+            const subEl = document.getElementById('matchSummarySubtitle');
+            const badgeEl = document.getElementById('matchSafetyBadge');
+
+            if (consStr === '') {
+                if (titleEl) titleEl.textContent = `Awaiting Actual Consumption Input (${prep} Portions Prepared)`;
+                if (subEl) subEl.textContent = `Enter actual portions consumed above to compute exact surplus & dispatch allocations.`;
+                if (badgeEl) {
+                    badgeEl.className = 'badge badge-none';
+                    badgeEl.textContent = 'Manual Entry Needed';
+                }
+            } else if (surplus <= 0) {
+                if (titleEl) titleEl.textContent = 'No Surplus Identified (100% Utilized / Zero Surplus)';
+                if (subEl) subEl.textContent = `All ${prep} prepared portions were fully consumed during this service window.`;
+                if (badgeEl) {
+                    badgeEl.className = 'badge badge-high';
+                    badgeEl.textContent = 'Optimal Utilization';
+                }
+            } else if (isSafe) {
+                if (titleEl) titleEl.textContent = `Surplus Identified: ${surplus} Portions (${(surplus * 0.35).toFixed(1)} kg of ${foodItem})`;
+                if (subEl) subEl.textContent = `Safe & Verified for Immediate Redistribution (${storageTemp}°C / ${storageTime}h hold) • ${RECIPIENT_PARTNERS.length} Verified Partner Matches Found`;
+                if (badgeEl) {
+                    badgeEl.className = 'badge badge-high';
+                    badgeEl.textContent = 'Safe & Approved';
+                }
+            } else {
+                if (titleEl) titleEl.textContent = `Surplus Identified: ${surplus} Portions — Critical Temperature/Time Notice`;
+                if (subEl) subEl.textContent = `Storage time (${storageTime}h) or Temp (${storageTemp}°C) requires immediate hot-hold (>60°C) or refrigeration (<=5°C) verification.`;
+                if (badgeEl) {
+                    badgeEl.className = 'badge badge-danger';
+                    badgeEl.textContent = 'Safety Review Needed';
+                }
+            }
+
+            updateFoodSafetyAdvisory(storageTime, storageTemp, document.getElementById('preparedTime')?.value);
+            renderMatchingTable(surplus, isSafe, foodItem);
+            FoodSafe.toast(`Surplus check complete: ${surplus} portions of "${foodItem}" calculated.`, 'info');
+        }
+
+        function updateFoodSafetyAdvisory(storageTime = 2, storageTemp = 65, prepTimeStr = '11:30') {
+            const advisoryBox = document.getElementById('foodSafetyAdvisoryBox');
+            const iconBox = document.getElementById('advisoryIconBox');
+            const titleEl = document.getElementById('advisoryTitle');
+            const subEl = document.getElementById('advisorySubtitle');
+            const expiryEl = document.getElementById('advisoryExpiryTime');
+            const textEl = document.getElementById('advisoryGuidelinesText');
+            if (!advisoryBox) return;
+
+            let prepHours = 11, prepMins = 30;
+            if (prepTimeStr && prepTimeStr.includes(':')) {
+                const parts = prepTimeStr.split(':');
+                prepHours = parseInt(parts[0]) || 11;
+                prepMins = parseInt(parts[1]) || 30;
+            }
+
+            const isHotHeld = storageTemp >= 60;
+            const isChilled = storageTemp <= 5;
+
+            if (isHotHeld) {
+                const maxHoldHours = 4;
+                const remainingHours = Math.max(0, maxHoldHours - storageTime);
+                const expiryDate = new Date();
+                expiryDate.setHours(prepHours + maxHoldHours, prepMins, 0);
+                const expiryTimeStr = `${expiryDate.getHours().toString().padStart(2, '0')}:${expiryDate.getMinutes().toString().padStart(2, '0')}`;
+
+                if (remainingHours > 0) {
+                    advisoryBox.style.borderColor = 'rgba(22, 163, 74, 0.3)';
+                    advisoryBox.style.background = 'rgba(22, 163, 74, 0.04)';
+                    if (iconBox) {
+                        iconBox.style.background = 'rgba(22, 163, 74, 0.12)';
+                        iconBox.style.color = '#16a34a';
+                    }
+                    if (titleEl) {
+                        titleEl.textContent = `Safe Consumption Window: ${remainingHours.toFixed(1)} Hours Remaining`;
+                        titleEl.style.color = 'var(--text-main)';
+                    }
+                    if (subEl) subEl.textContent = `Maintained under Hot Holding (${storageTemp}°C) • Standard 4-Hour FSSAI & HACCP Limit`;
+                    if (expiryEl) {
+                        expiryEl.textContent = `Best consumed before ${expiryTimeStr}`;
+                        expiryEl.style.background = 'rgba(22, 163, 74, 0.12)';
+                        expiryEl.style.color = '#16a34a';
+                    }
+                    if (textEl) textEl.innerHTML = `<strong>Operational Advice:</strong> Food is hot-safe. Transport in insulated containers above 60°C. If food cools below 60°C before distribution, reheat thoroughly to &gt;74°C for at least 2 minutes.`;
+                } else {
+                    advisoryBox.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                    advisoryBox.style.background = 'rgba(239, 68, 68, 0.04)';
+                    if (iconBox) {
+                        iconBox.style.background = 'rgba(239, 68, 68, 0.12)';
+                        iconBox.style.color = '#ef4444';
+                    }
+                    if (titleEl) {
+                        titleEl.textContent = 'Safety Window Expired: Exceeded 4 Hours';
+                        titleEl.style.color = '#ef4444';
+                    }
+                    if (subEl) subEl.textContent = `Storage time (${storageTime}h) exceeds the 4-hour hot-hold regulatory maximum`;
+                    if (expiryEl) {
+                        expiryEl.textContent = `Expired at ${expiryTimeStr}`;
+                        expiryEl.style.background = 'rgba(239, 68, 68, 0.12)';
+                        expiryEl.style.color = '#ef4444';
+                    }
+                    if (textEl) textEl.innerHTML = `<strong>Critical Warning:</strong> Food cannot be redistributed for human consumption due to bacterial proliferation risk. Dispose of safely or send to bio-waste/composting.`;
+                }
+            } else if (isChilled) {
+                const maxChillHours = 24;
+                const remainingHours = Math.max(0, maxChillHours - storageTime);
+                advisoryBox.style.borderColor = 'rgba(24, 127, 135, 0.3)';
+                advisoryBox.style.background = 'rgba(24, 127, 135, 0.04)';
+                if (iconBox) {
+                    iconBox.style.background = 'rgba(24, 127, 135, 0.12)';
+                    iconBox.style.color = 'var(--primary)';
+                }
+                if (titleEl) {
+                    titleEl.textContent = `Cold Chain Storage: Good for ${remainingHours.toFixed(0)} Hours (Refrigerated)`;
+                    titleEl.style.color = 'var(--text-main)';
+                }
+                if (subEl) subEl.textContent = `Maintained under Cold Holding (${storageTemp}°C) • Standard 24-Hour Refrigeration Limit`;
+                if (expiryEl) {
+                    expiryEl.textContent = `Refrigerated at ${storageTemp}°C`;
+                    expiryEl.style.background = 'rgba(24, 127, 135, 0.12)';
+                    expiryEl.style.color = 'var(--primary)';
+                }
+                if (textEl) textEl.innerHTML = `<strong>Operational Advice:</strong> Maintain sealed cold chain (&le;5°C). Prior to recipient consumption, recipients must reheat the dish to an internal core temperature of &gt;74°C.`;
+            } else {
+                // Danger Zone (5°C - 60°C)
+                const remainingHours = Math.max(0, 2 - storageTime);
+                advisoryBox.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                advisoryBox.style.background = 'rgba(245, 158, 11, 0.04)';
+                if (iconBox) {
+                    iconBox.style.background = 'rgba(245, 158, 11, 0.12)';
+                    iconBox.style.color = '#d97706';
+                }
+                if (titleEl) {
+                    titleEl.textContent = storageTime <= 2 ? `Temperature Danger Zone: Fast-Track Required (${remainingHours.toFixed(1)}h left)` : 'Temperature Danger Zone: Exceeded 2h Limit';
+                    titleEl.style.color = '#d97706';
+                }
+                if (subEl) subEl.textContent = `Current temperature (${storageTemp}°C) is in the 5°C–60°C bacterial growth range`;
+                if (expiryEl) {
+                    expiryEl.textContent = storageTime <= 2 ? 'Fast-Track Dispatch' : 'Safety Review Required';
+                    expiryEl.style.background = 'rgba(245, 158, 11, 0.12)';
+                    expiryEl.style.color = '#d97706';
+                }
+                if (textEl) textEl.innerHTML = storageTime <= 2 
+                    ? `<strong>Fast-Track Advice:</strong> Food is between 5°C and 60°C. It must be consumed immediately within the next ${remainingHours.toFixed(1)} hours or rapidly reheated to >74°C. Do not re-refrigerate.`
+                    : `<strong>Safety Alert:</strong> Food held between 5°C and 60°C for >2 hours cannot be held further. Must be served immediately or discarded if time exceeds 4 hours.`;
+            }
+        }
+
+        function autoRecalcSurplusPreview() {
+            const prepInput = document.getElementById('preparedQuantity');
+            const consInput = document.getElementById('actualConsumption');
+            if (!prepInput || !consInput) return;
+
+            const prepStr = prepInput.value.trim();
+            const consStr = consInput.value.trim();
+            const titleEl = document.getElementById('matchSummaryTitle');
+
+            if (prepStr === '') {
+                if (titleEl) titleEl.textContent = 'Surplus Preview: Enter Prepared Quantity';
+                return;
+            }
+
+            const prep = Math.max(0, parseFloat(prepStr) || 0);
+
+            if (consStr === '') {
+                if (titleEl) titleEl.textContent = `Surplus Preview: ${prep} Prepared (Enter actual consumption to calculate surplus)`;
+                return;
+            }
+
+            let cons = parseFloat(consStr) || 0;
+            if (cons > prep) {
+                cons = prep;
+                consInput.value = prep;
+            }
+
+            const surplus = Math.max(0, prep - cons);
+            const food = getSelectedFoodItem();
+            if (titleEl) {
+                titleEl.textContent = `Surplus Preview: ${surplus} Portions (${(surplus * 0.35).toFixed(1)} kg of ${food})`;
+            }
+        }
+
+        function recalculateMatchingResults() {
+            const prepInput = document.getElementById('preparedQuantity');
+            const consInput = document.getElementById('actualConsumption');
+            const prep = Math.max(0, parseFloat(prepInput ? prepInput.value : 0) || 0);
+            const cons = Math.min(prep, parseFloat(consInput ? consInput.value : 0) || 0);
+            const surplus = Math.max(0, prep - cons);
+            const storageTime = parseFloat(document.getElementById('storageTime')?.value) || 0;
+            const storageTemp = parseFloat(document.getElementById('storageTemp')?.value) || 0;
+            const prepTime = document.getElementById('preparedTime')?.value || '11:30';
+            const isSafe = storageTime <= 4 && (storageTemp >= 60 || storageTemp <= 5);
+            const food = getSelectedFoodItem();
+
+            updateFoodSafetyAdvisory(storageTime, storageTemp, prepTime);
+            renderMatchingTable(surplus, isSafe, food);
+            FoodSafe.toast('Matching algorithm updated with selected priority strategy.', 'info');
+        }
+
+        // Render NGO Matching Table with Smart Priority Strategies
+        function renderMatchingTable(surplus = 17, isSafe = true, customFood = null) {
+            const tbody = document.getElementById('recipientsTableBody');
+            if (!tbody) return;
+
+            const activeFood = customFood || getSelectedFoodItem() || 'Steamed Rice & Dal Combo';
+            const strategy = document.getElementById('matchingStrategySelect')?.value || 'nearest';
+            const maxRadius = parseFloat(document.getElementById('matchingRadiusSelect')?.value) || 10;
+
+            // 1. Filter by radius
+            let list = RECIPIENT_PARTNERS.filter(ngo => (ngo.distanceKm || 5) <= maxRadius);
+
+            // 2. Sort according to selected matching strategy
+            if (strategy === 'nearest') {
+                list.sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
+            } else if (strategy === 'capacity') {
+                list.sort((a, b) => (b.defaultPortions || 0) - (a.defaultPortions || 0));
+            } else if (strategy === 'childcare') {
+                list.sort((a, b) => {
+                    const aScore = (a.category && (a.category.includes('Child') || a.category.includes('Shelter'))) ? 1 : 0;
+                    const bScore = (b.category && (b.category.includes('Child') || b.category.includes('Shelter'))) ? 1 : 0;
+                    return bScore - aScore;
+                });
+            }
+
+            // 3. Allocate portions based on strategy
+            let remainingSurplus = surplus;
+
+            const rowsHtml = list.map((ngo, idx) => {
+                let allocated = 0;
+                if (strategy === 'balanced') {
+                    const targetShare = Math.ceil(surplus / Math.max(1, list.length));
+                    allocated = Math.min(remainingSurplus, Math.min(targetShare, ngo.defaultPortions));
+                } else {
+                    if (remainingSurplus > 0) {
+                        allocated = Math.min(remainingSurplus, ngo.defaultPortions);
+                    }
+                }
+                remainingSurplus -= allocated;
+
+                const foodDisplay = (activeFood && activeFood !== 'All Menu Items' && activeFood !== 'All Menu Items (Combo)') ? activeFood : ngo.food;
+                const storageTime = parseFloat(document.getElementById('storageTime')?.value) || 0;
+                const storageTemp = parseFloat(document.getElementById('storageTemp')?.value) || 65;
+                const isCriticallyUnsafe = storageTime > 4 || (storageTime > 2 && storageTemp > 5 && storageTemp < 60);
+
+                let statusBadge = isSafe ? '<span class="badge badge-high">Safe &amp; Approved</span>' : '<span class="badge badge-medium">Requires Fast-Track</span>';
+                let dispatchButtonHtml = `
+                    <button type="button" class="btn-dispatch" onclick="dispatchSurplusToNgo('${ngo.name.replace(/'/g, "\\'")}', '${ngo.phone}', '${foodDisplay.replace(/'/g, "\\'")}', ${allocated > 0 ? allocated : 5})">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Dispatch &amp; Log
+                    </button>
+                `;
+
+                if (isCriticallyUnsafe) {
+                    statusBadge = '<span class="badge badge-danger" title="Exceeded safe time/temp limits">⛔ Unsafe to Redistribute</span>';
+                    dispatchButtonHtml = `
+                        <button type="button" class="btn-dispatch-outline" disabled style="opacity: 0.55; cursor: not-allowed; color: #dc2626; border-color: #fca5a5; background: rgba(239, 68, 68, 0.05);" title="FSSAI Safety Guard: Redistribution blocked to prevent food safety hazard.">
+                            ⛔ Safety Lock Active
+                        </button>
+                    `;
+                }
+
+                return `
+                    <tr>
+                        <td>
+                            <strong>${ngo.name}</strong>
+                            <div style="font-size: 0.76rem; color: var(--text-muted);">${ngo.area} &bull; <span style="color: var(--primary); font-weight: 500;">${ngo.category || 'Verified Partner'}</span></div>
+                        </td>
+                        <td>
+                            <a href="tel:${ngo.phone.replace(/[^0-9+]/g, '')}" class="phone-link" title="Click to call ${ngo.contact}">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                ${ngo.phone}
+                            </a>
+                            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Coordinator: ${ngo.contact}</div>
+                        </td>
+                        <td>${statusBadge}</td>
+                        <td><strong style="color: var(--primary);">${allocated > 0 ? `${allocated} Portions` : 'Standby Capacity'}</strong></td>
+                        <td><span style="font-weight: 600;">${ngo.distance}</span></td>
+                        <td>
+                            ${dispatchButtonHtml}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rowsHtml || `<tr><td colspan="6" style="text-align: center; padding: 22px; color: var(--text-muted);">No verified recipient partners found within ${maxRadius} km radius. Try expanding the rescue radius.</td></tr>`;
+
+            // Dynamic Dispatch All button text
+            const dispatchAllBtn = document.querySelector('#matchingSummaryCard .btn-dispatch');
+            if (dispatchAllBtn) {
+                dispatchAllBtn.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    Dispatch All (${surplus} Meals)
+                `;
+            }
+        }
+
+        function dispatchSurplusToNgo(ngoName, phone, foodItem, portions) {
+            const storageTime = parseFloat(document.getElementById('storageTime')?.value) || 0;
+            const storageTemp = parseFloat(document.getElementById('storageTemp')?.value) || 65;
+            const isCriticallyUnsafe = storageTime > 4 || (storageTime > 2 && storageTemp > 5 && storageTemp < 60);
+
+            if (isCriticallyUnsafe) {
+                FoodSafe.toast('FSSAI Food Safety Guard: Cannot dispatch food that has exceeded holding time (>4h) or temperature danger limits (5°C–60°C).', 'danger');
+                return;
+            }
+
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            const dateStr = now.toISOString().slice(0, 10);
+            const activeMealType = FoodSafe.getTarget()?.mealType || 'Lunch';
+
+            const newEntry = {
+                id: `RED-${Date.now().toString().slice(-4)}`,
+                date: `${dateStr} (${timeStr})`,
+                shift: activeMealType,
+                ngo: ngoName,
+                phone: phone,
+                food: foodItem,
+                portions: parseInt(portions) || 10,
+                status: "Dispatched",
+                co2Avoided: (parseInt(portions) || 10) * CO2_FACTOR
+            };
+
+            if (FoodSafe.saveRedistributionAsync) {
+                FoodSafe.saveRedistributionAsync(newEntry);
+            } else {
+                FoodSafe.addRedistribution(newEntry);
+            }
+            renderRedistributionHistory();
+            FoodSafe.toast(`Dispatched ${portions} portions to ${ngoName}! Logged in audit history & synced with Daily Summary.`, 'success');
+        }
+
+        function dispatchAllSurplus() {
+            const storageTime = parseFloat(document.getElementById('storageTime')?.value) || 0;
+            const storageTemp = parseFloat(document.getElementById('storageTemp')?.value) || 65;
+            const isCriticallyUnsafe = storageTime > 4 || (storageTime > 2 && storageTemp > 5 && storageTemp < 60);
+
+            if (isCriticallyUnsafe) {
+                FoodSafe.toast('FSSAI Food Safety Guard: Cannot dispatch food that has exceeded holding time (>4h) or temperature danger limits (5°C–60°C).', 'danger');
+                return;
+            }
+            const prepInput = document.getElementById('preparedQuantity');
+            const consInput = document.getElementById('actualConsumption');
+            const prep = Math.max(0, parseFloat(prepInput ? prepInput.value : 0) || 0);
+            const cons = Math.min(prep, parseFloat(consInput ? consInput.value : 0) || 0);
+            const surplus = Math.max(0, prep - cons);
+            const food = getSelectedFoodItem();
+
+            if (surplus <= 0) {
+                FoodSafe.toast('No surplus portions available to dispatch.', 'warning');
+                return;
+            }
+
+            let remaining = surplus;
+            let dispatchedCount = 0;
+            const strategy = document.getElementById('matchingStrategySelect')?.value || 'nearest';
+            const maxRadius = parseFloat(document.getElementById('matchingRadiusSelect')?.value) || 10;
+            let list = RECIPIENT_PARTNERS.filter(ngo => (ngo.distanceKm || 5) <= maxRadius);
+
+            if (strategy === 'nearest') {
+                list.sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
+            } else if (strategy === 'capacity') {
+                list.sort((a, b) => (b.defaultPortions || 0) - (a.defaultPortions || 0));
+            }
+
+            list.forEach((ngo, idx) => {
+                if (remaining > 0) {
+                    const toSend = Math.min(remaining, ngo.defaultPortions);
+                    setTimeout(() => {
+                        dispatchSurplusToNgo(ngo.name, ngo.phone, food, toSend);
+                    }, idx * 250);
+                    remaining -= toSend;
+                    dispatchedCount += toSend;
+                }
+            });
+
+            FoodSafe.toast(`Auto-dispatching ${dispatchedCount} surplus meals to matched recipient partners!`, 'success');
+        }
+
+        // Redistribution Audit Log Management
+        function renderRedistributionHistory(filterList = null) {
+            const tbody = document.getElementById('redistributionHistoryBody');
+            if (!tbody) return;
+            const history = filterList || FoodSafe.getRedistribution();
+
+            if (history.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted); font-weight: 500;">
+                            No redistribution records found. Click "+ Add Recipient" or dispatch meals above to create history logs.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = history.map((item) => {
+                const statusBadge = item.status === 'Delivered' ? 'badge-high' : (item.status === 'In Transit' ? 'badge-medium' : 'badge-low');
+                const co2Display = (item.co2Avoided || (item.portions * CO2_FACTOR)).toFixed(1);
+
+                return `
+                    <tr>
+                        <td><strong>${item.date} (${item.shift || 'Lunch'})</strong></td>
+                        <td><strong>${item.ngo}</strong></td>
+                        <td>
+                            <a href="tel:${item.phone.replace(/[^0-9+]/g, '')}" class="phone-link">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                ${item.phone}
+                            </a>
+                        </td>
+                        <td>${item.food}</td>
+                        <td><strong style="color: var(--primary);">${item.portions} Portions</strong></td>
+                        <td>
+                            <select class="badge ${statusBadge}" onchange="updateRedistributionItemStatus('${item.id}', this.value)" style="border: none; outline: none; cursor: pointer; font-family: inherit; font-size: inherit; font-weight: inherit; -webkit-appearance: menulist; padding-right: 20px; min-width: 110px;">
+                                <option value="Dispatched" ${item.status === 'Dispatched' ? 'selected' : ''}>Dispatched</option>
+                                <option value="In Transit" ${item.status === 'In Transit' ? 'selected' : ''}>In Transit</option>
+                                <option value="Delivered" ${item.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                            </select>
+                        </td>
+                        <td style="color: #15803d; font-weight: 700;">+${co2Display} kg CO2e</td>
+                        <td>
+                            <button type="button" class="btn-dispatch-outline" style="padding: 4px 8px; font-size: 0.76rem; color: #dc2626; border-color: #fca5a5;" onclick="deleteRedistributionItem('${item.id}')" title="Delete Log">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterRedistributionHistory() {
+            const status = document.getElementById('historyStatusFilter').value;
+            const search = document.getElementById('historySearchInput').value.toLowerCase().trim();
+            let history = FoodSafe.getRedistribution();
+
+            if (status !== 'all') {
+                history = history.filter(item => item.status === status);
+            }
+            if (search) {
+                history = history.filter(item => 
+                    item.ngo.toLowerCase().includes(search) || 
+                    item.food.toLowerCase().includes(search) ||
+                    item.phone.toLowerCase().includes(search)
+                );
+            }
+            renderRedistributionHistory(history);
+        }
+
+        function updateRedistributionItemStatus(id, newStatus) {
+            let history = FoodSafe.getRedistribution();
+            let item = history.find(i => i.id === id);
+            if (item) {
+                item.status = newStatus;
+                FoodSafe.saveRedistribution(history);
+                filterRedistributionHistory();
+                FoodSafe.toast('Delivery status updated to ' + newStatus, 'success');
+            }
+        }
+
+        function deleteRedistributionItem(id) {
+            let history = FoodSafe.getRedistribution().filter(item => item.id !== id);
+            FoodSafe.saveRedistribution(history);
+            filterRedistributionHistory();
+            FoodSafe.toast('Log entry removed successfully.', 'info');
+        }
+
+        function clearRedistributionHistory() {
+            if (confirm('Are you sure you want to clear all completed redistribution logs?')) {
+                FoodSafe.saveRedistribution([]);
+                renderRedistributionHistory([]);
+                FoodSafe.toast('Redistribution history cleared.', 'info');
+            }
+        }
+
+        function exportRedistributionHistory() {
+            const history = FoodSafe.getRedistribution();
+            if (history.length === 0) {
+                FoodSafe.toast('No history records to export.', 'warning');
+                return;
+            }
+            const headers = ["ID", "Date & Shift", "Recipient NGO", "Phone", "Food Item", "Portions Donated", "Status", "Avoided CO2 (kg)"];
+            const rows = history.map(item => [
+                item.id,
+                item.date,
+                item.ngo,
+                item.phone,
+                item.food,
+                item.portions,
+                item.status,
+                (item.co2Avoided || item.portions * 2.0).toFixed(1)
+            ]);
+            FoodSafe.exportToCSV('Foodagement_Redistribution_History', headers, rows);
+        }
+
+        function updateModalCalculationPreview() {
+            const portions = parseInt(document.getElementById('modalPortions').value) || 0;
+            const weight = (portions * 0.35).toFixed(1);
+            const co2 = (portions * CO2_FACTOR).toFixed(1);
+            const weightEl = document.getElementById('modalEstWeight');
+            const co2El = document.getElementById('modalEstCo2');
+            if (weightEl) weightEl.textContent = `~${weight} kg`;
+            if (co2El) co2El.textContent = `+${co2} kg CO2e`;
+        }
+
+        function openAddRecipientModal() {
+            const modal = document.getElementById('addRecipientModal');
+            if (modal) modal.classList.add('active');
+        }
+
+        function closeAddRecipientModal() {
+            const modal = document.getElementById('addRecipientModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function handleManualHistorySubmit(e) {
+            e.preventDefault();
+            const ngo = document.getElementById('modalNgoName').value.trim();
+            const coordinator = document.getElementById('modalContactPerson') ? document.getElementById('modalContactPerson').value.trim() : '';
+            const phone = document.getElementById('modalNgoPhone').value.trim();
+            const food = document.getElementById('modalFoodItem').value.trim();
+            const portions = parseInt(document.getElementById('modalPortions').value) || 10;
+            const shift = document.getElementById('modalShift') ? document.getElementById('modalShift').value : 'Lunch';
+            const status = document.getElementById('modalStatus') ? document.getElementById('modalStatus').value : 'Dispatched';
+
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            const newEntry = {
+                id: `RED-${Date.now().toString().slice(-4)}`,
+                date: `Today (Aug 15), ${timeStr}`,
+                shift: shift,
+                ngo: ngo + (coordinator ? ` (Attn: ${coordinator})` : ''),
+                phone: phone,
+                food: food,
+                portions: portions,
+                status: status,
+                co2Avoided: portions * CO2_FACTOR
+            };
+
+            FoodSafe.addRedistribution(newEntry);
+            closeAddRecipientModal();
+            const form = document.getElementById('manualHistoryForm');
+            if (form) form.reset();
+            renderRedistributionHistory();
+            FoodSafe.toast(`Recipient "${ngo}" added & dispatch recorded!`, 'success');
+        }
+
+        function syncHeaderDetails() {
+            const session = FoodSafe.getSession();
+            const settings = FoodSafe.getKitchenSettings();
+            const notifs = FoodSafe.getNotifications();
+            const unreadCount = FoodSafe.getUnreadNotificationCount();
+
+            const name = session.name || settings.managerName || 'Kitchen Manager';
+            const userAvatar = document.getElementById('forecastUserAvatar');
+            const userName = document.getElementById('forecastUserName');
+            const dropName = document.getElementById('forecastDropName');
+            const dropRole = document.getElementById('forecastDropRole');
+            const notifBadge = document.getElementById('forecastNotifBadge');
+            const statusBadge = document.getElementById('forecastKitchenStatusBadge');
+            const statusText = document.getElementById('forecastKitchenStatusText');
+            const dateEl = document.getElementById('forecastHeaderDate');
+
+            if (typeof FoodSafeAvatars !== 'undefined') {
+                FoodSafeAvatars.syncAllAvatars();
+            } else if (userAvatar) {
+                userAvatar.textContent = name.replace(/Chef\s*/i, '').charAt(0).toUpperCase() || 'M';
+            }
+            if (userName) userName.textContent = name;
+            if (dropName) dropName.textContent = name;
+            if (dropRole) dropRole.textContent = session.role || 'Kitchen Manager';
+
+            if (notifBadge) {
+                notifBadge.textContent = unreadCount;
+                notifBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+            }
+
+            if (settings.status === 'closed') {
+                if (statusBadge) statusBadge.className = 'status-badge status-closed';
+                if (statusText) statusText.textContent = 'Kitchen Status: Closed';
+            } else {
+                if (statusBadge) statusBadge.className = 'status-badge status-open';
+                if (statusText) statusText.textContent = 'Kitchen Status: Open';
+            }
+
+            if (dateEl) {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = now.toLocaleDateString('en-US', options);
+            }
+
+            const notifContainer = document.getElementById('forecastNotifContainer');
+            if (notifContainer) {
+                if (notifs.length === 0) {
+                    notifContainer.innerHTML = '<div style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">No notifications.</div>';
+                } else {
+                    notifContainer.innerHTML = notifs.map(n => `
+                        <button type="button" class="dropdown-item" style="opacity: ${n.read ? '0.6' : '1.0'};">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.84rem; color: var(--text-main);">${n.title}</div>
+                                <div style="font-size: 0.74rem; color: var(--text-muted);">${n.detail}</div>
+                            </div>
+                        </button>
+                    `).join('');
+                }
+            }
+        }
+
+        function toggleKitchenStatus() {
+            FoodSafe.toggleKitchenStatus();
+            syncHeaderDetails();
+        }
+
+        function clearAllNotifications() {
+            FoodSafe.clearAllNotifications();
+            syncHeaderDetails();
+            FoodSafe.toast('Notifications cleared.', 'info');
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to log out?')) {
+                FoodSafe.logout();
+                FoodSafe.toast('Logged out successfully.', 'info');
+                setTimeout(() => {
+                    window.location.href = '../login/login.html';
+                }, 400);
+            }
+        }
+
+        function persistForecastInputChanges() {
+            const menu = document.getElementById('todaysMenu')?.value?.trim();
+            const date = document.getElementById('date')?.value;
+            const mealType = document.getElementById('mealType')?.value;
+            const attStr = document.getElementById('attendance')?.value?.trim();
+            const weather = document.getElementById('weather')?.value;
+            const histStr = document.getElementById('historical')?.value?.trim();
+            const calendarEvent = document.getElementById('calendarEvent')?.value;
+
+            const attendance = attStr !== '' && attStr !== undefined ? parseInt(attStr) : null;
+            const historical = histStr !== '' && histStr !== undefined ? parseInt(histStr) : null;
+
+            FoodSafe.setTarget({
+                menu,
+                date,
+                mealType,
+                attendance,
+                weather,
+                historical,
+                event: calendarEvent
+            });
+        }
+
+        function persistSurplusInputChanges() {
+            const prepStr = document.getElementById('preparedQuantity')?.value?.trim();
+            const consStr = document.getElementById('actualConsumption')?.value?.trim();
+            const prep = prepStr !== '' && prepStr !== undefined ? parseFloat(prepStr) : null;
+            const cons = consStr !== '' && consStr !== undefined ? parseFloat(consStr) : null;
+            FoodSafe.setTarget({
+                portions: prep,
+                actualConsumption: cons
+            });
+            autoRecalcSurplusPreview();
+        }
+
+        function syncTargetIntoForecastForm() {
+            const target = FoodSafe.getTarget();
+            if (!target) return;
+            const dateInput = document.getElementById('date');
+            const attInput = document.getElementById('attendance');
+            const menuInput = document.getElementById('todaysMenu');
+            const mealTypeSelect = document.getElementById('mealType');
+            const weatherSelect = document.getElementById('weather');
+            const eventSelect = document.getElementById('calendarEvent');
+            const histInput = document.getElementById('historical');
+            const prepInput = document.getElementById('preparedQuantity');
+            const consInput = document.getElementById('actualConsumption');
+
+            const activeEl = document.activeElement;
+            if (dateInput && activeEl !== dateInput) {
+                dateInput.value = target.date || new Date().toISOString().slice(0, 10);
+            }
+            if (attInput && activeEl !== attInput) {
+                if (target.attendance !== undefined && target.attendance !== null && target.attendance !== '') {
+                    attInput.value = target.attendance;
+                } else if (target.attendance === null || target.attendance === '') {
+                    attInput.value = '';
+                }
+            }
+            if (menuInput && target.menu && activeEl !== menuInput) {
+                menuInput.value = target.menu;
+            }
+            if (mealTypeSelect && target.mealType && activeEl !== mealTypeSelect) {
+                const mt = target.mealType.toLowerCase();
+                if (mt.includes('break')) mealTypeSelect.value = 'breakfast';
+                else if (mt.includes('snack')) mealTypeSelect.value = 'snack';
+                else if (mt.includes('din')) mealTypeSelect.value = 'dinner';
+                else mealTypeSelect.value = 'lunch';
+            }
+            if (weatherSelect && target.weather && activeEl !== weatherSelect) {
+                const w = target.weather.toLowerCase();
+                if (w.includes('cloud')) weatherSelect.value = 'cloudy';
+                else if (w.includes('rain')) weatherSelect.value = 'rainy';
+                else if (w.includes('snow')) weatherSelect.value = 'snowy';
+                else weatherSelect.value = 'sunny';
+            }
+            if (eventSelect && target.event && activeEl !== eventSelect) {
+                const ev = target.event.toLowerCase();
+                if (ev.includes('holi')) eventSelect.value = 'holiday';
+                else if (ev.includes('exam')) eventSelect.value = 'exam';
+                else if (ev.includes('vacat') || ev.includes('break')) eventSelect.value = 'vacation';
+                else if (ev.includes('special')) eventSelect.value = 'special';
+                else eventSelect.value = 'none';
+            }
+            if (histInput && activeEl !== histInput) {
+                if (target.historical !== undefined && target.historical !== null && target.historical !== '') {
+                    histInput.value = target.historical;
+                } else if (target.historical === null || target.historical === '') {
+                    histInput.value = '';
+                }
+            }
+            if (prepInput && activeEl !== prepInput) {
+                if (target.portions !== undefined && target.portions !== null && target.portions !== '') {
+                    prepInput.value = target.portions;
+                } else if (target.portions === null || target.portions === '') {
+                    prepInput.value = '';
+                }
+            }
+            if (consInput && activeEl !== consInput) {
+                if (target.actualConsumption !== undefined && target.actualConsumption !== null && target.actualConsumption !== '') {
+                    consInput.value = target.actualConsumption;
+                } else if (target.actualConsumption === null || target.actualConsumption === '') {
+                    consInput.value = '';
+                }
+            }
+            
+            syncMenuItems();
+            autoRecalcSurplusPreview();
+        }
+
+        // Support deep linking via hash & restore theme & sync historical
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof FoodSafe !== 'undefined' && !FoodSafe.requireAuth('../login/login.html')) {
+                return;
+            }
+            FoodSafe.initTheme();
+
+            // Set default date to today
+            const dateInput = document.getElementById('date');
+            if (dateInput && !dateInput.value) {
+                dateInput.value = new Date().toISOString().slice(0, 10);
+            }
+
+            // Set dynamic placeholder from historical average (last 3 days)
+            const histList = FoodSafe.getHistory();
+            if (histList && histList.length > 0) {
+                const vals = histList.slice(0, 3).map(e => parseFloat(e.foodConsumed) || 0);
+                const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+                const histInput = document.getElementById('historical');
+                if (histInput) histInput.placeholder = `e.g. ${avg}`;
+            }
+
+            syncTargetIntoForecastForm();
+            syncHeaderDetails();
+            updateFoodSafetyAdvisory(parseFloat(document.getElementById('storageTime')?.value) || 2, parseFloat(document.getElementById('storageTemp')?.value) || 65, document.getElementById('preparedTime')?.value || '11:30');
+            renderMatchingTable();
+            renderRedistributionHistory();
+
+            const hash = window.location.hash.replace('#', '');
+            if (hash === 'surplusDistributionView') {
+                switchTab('surplusDistributionView', document.getElementById('btnNavSurplus'));
+            } else if (hash === 'forecastView') {
+                switchTab('forecastView', document.getElementById('btnNavForecast'));
+            }
+
+            // Init Supabase Realtime Sync
+            if (FoodSafe.initRealtimeSubscriptions) {
+                FoodSafe.initRealtimeSubscriptions();
+            }
+
+            // Realtime Sync Listener
+            window.addEventListener('foodsafe-data-updated', () => {
+                syncHeaderDetails();
+                renderMatchingTable();
+                renderRedistributionHistory();
+                FoodSafe.toast("Real-time update received!", "info", 2000);
+            });
+
+            // Real-time cross-tab synchronization
+            window.addEventListener('foodsafe-target-change', () => {
+                syncTargetIntoForecastForm();
+            });
+            window.addEventListener('foodsafe-settings-change', () => {
+                syncHeaderDetails();
+            });
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'foodsafe_forecast_target') syncTargetIntoForecastForm();
+                if (e.key === 'foodsafe_kitchen_settings') syncHeaderDetails();
+            });
+        });
+    </script>
+</body>
+</html>
